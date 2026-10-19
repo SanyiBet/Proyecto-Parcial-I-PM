@@ -13,7 +13,7 @@ async function conectarDB() {
     try {
         client = new MongoClient(uri, {
             maxPoolSize: 20,
-            serverSelectionTimeoutMS: 5000,
+            serverSelectionTimeoutMS: 15000,
         });
 
         await client.connect();

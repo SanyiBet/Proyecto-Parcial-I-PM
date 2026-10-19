@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const { conectarDB } = require("./database/connection");
+const { pingRedis } = require("./database/redis");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,12 +13,22 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Endpoint de verificación de salud del sistema (Health Check)
-app.get("/api/health", (req, res) => {
+app.get("/api/health", async (req, res) => {
+  let redisEstado = "conectado";
+  try {
+    await pingRedis();
+  } catch (err) {
+    redisEstado = "error: " + err.message;
+  }
+
   res.status(200).json({
     estado: "ok",
     servicio: "TransOrense Backend API",
     version: "1.0.0",
-    motor_bd: "MongoDB Atlas",
+    bases_de_datos: {
+      nosql_documental: "MongoDB Atlas (Conectado)",
+      nosql_clave_valor: `Upstash Redis (${redisEstado})`
+    },
     identificadores: "UUID v7",
     timestamp: new Date().toISOString(),
   });
@@ -44,23 +55,23 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Inicio del servidor con conexión a MongoDB Atlas
+// Inicio del servidor con conexión a MongoDB Atlas y Upstash Redis
 async function iniciarServidor() {
   try {
     await conectarDB();
+    const redisPing = await pingRedis();
+    console.log(`✅ Conexión establecida con Upstash Redis: [${redisPing}] - Clave-Valor / TTL activo`);
+
     app.listen(PORT, () => {
-      console.log(`Servidor TransOrense activo en: http://localhost:${PORT}`);
-      console.log(
-        `Chequeo de salud disponible en: http://localhost:${PORT}/api/health`,
-      );
+      console.log(`🚀 Servidor TransOrense activo en: http://localhost:${PORT}`);
+      console.log(`📡 Chequeo de salud: http://localhost:${PORT}/api/health`);
     });
   } catch (error) {
-    console.error("Fallo crítico al iniciar el servidor:", error.message);
+    console.error("❌ Fallo crítico al iniciar el servidor:", error.message);
     process.exit(1);
   }
 }
 
-// Iniciar solo si se ejecuta directamente
 if (require.main === module) {
   iniciarServidor();
 }
