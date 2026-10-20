@@ -1,13 +1,61 @@
 <!doctype html>
-<html lang="en">
+<html lang="es" class="light">
 <head>
   <meta charset="utf-8">
-  <title>PmFrontend</title>
+  <title>TransOrense — Cooperativa de Transporte Interprovincial</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Plataforma oficial de venta de pasajes, reserva de asientos y gestión de encomiendas de TransOrense.">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+  <!-- Tipografías Oficiales: Montserrat (Titulares) y Poppins (Lectura/Cuerpo) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN con configuración del Sistema de Diseño TransOrense -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            transorense: {
+              verde: '#00875A',
+              'verde-hover': '#006644',
+              'verde-suave': '#E3FCEF',
+              amarillo: '#FFCC00',
+              'amarillo-hover': '#E6B800',
+              'amarillo-suave': '#FFF9E6',
+              azul: '#003399',
+              'azul-hover': '#002266',
+              'azul-suave': '#E8F0FE',
+              blanco: '#FFFFFF',
+              crema: '#FDFBF7',
+              superficie: '#F4F5F7',
+              borde: '#E2E8F0',
+              oscuro: '#0F172A',
+              'oscuro-card': '#1E293B',
+              'oscuro-borde': '#334155',
+            }
+          },
+          fontFamily: {
+            montserrat: ['Montserrat', 'sans-serif'],
+            poppins: ['Poppins', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- SweetAlert2 CDN (CARD-11) -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Google Identity Services SDK (CARD-12) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
-<body>
+<body class="font-poppins bg-transorense-crema text-slate-800 dark:bg-transorense-oscuro dark:text-slate-100 transition-colors duration-200 antialiased">
   <app-root></app-root>
 </body>
 </html>

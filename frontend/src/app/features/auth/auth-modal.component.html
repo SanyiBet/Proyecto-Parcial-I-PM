@@ -1,0 +1,217 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+  <div class="relative w-full max-w-md bg-white dark:bg-slate-800 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden transition-all">
+    
+    <!-- Botón de Cerrar -->
+    <button
+      (click)="cerrar.emit()"
+      type="button"
+      class="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+      title="Cerrar"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+
+    <!-- Modal Condicional: Completar Cédula para Google OAuth -->
+    <div *ngIf="modalCedulaPendiente()" class="p-8">
+      <div class="text-center mb-6">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <h3 class="text-xl font-bold font-montserrat text-slate-900 dark:text-white">
+          Paso Obligatorio: Cédula
+        </h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          Por disposición de la ANT del Ecuador, todos los boletos y encomiendas deben estar asociados a una cédula verificada.
+        </p>
+      </div>
+
+      <form [formGroup]="formCompletarCedula" (ngSubmit)="onSubmitCompletarCedula()" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+            Número de Cédula (10 dígitos)
+          </label>
+          <input
+            type="text"
+            maxlength="10"
+            formControlName="cedula"
+            placeholder="0715432183"
+            class="w-full px-4 py-2.5 rounded-xl border bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-transorense-verde transition-all"
+            [ngClass]="formCompletarCedula.get('cedula')?.touched && formCompletarCedula.get('cedula')?.invalid ? 'border-rose-500' : 'border-slate-300 dark:border-slate-600'"
+          />
+          <span *ngIf="formCompletarCedula.get('cedula')?.touched && formCompletarCedula.get('cedula')?.errors?.['cedulaInvalida']" class="text-xs text-rose-500 block mt-1">
+            {{ formCompletarCedula.get('cedula')?.errors?.['mensaje'] }}
+          </span>
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="cargando()"
+          class="w-full btn-transorense-primary py-3 font-semibold text-sm rounded-xl disabled:opacity-50 flex items-center justify-center space-x-2"
+        >
+          <span *ngIf="!cargando()">Vincular Cédula y Continuar</span>
+          <span *ngIf="cargando()">Validando...</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Contenido Estándar: Login / Registro -->
+    <div *ngIf="!modalCedulaPendiente()" class="p-8">
+      <!-- Header con Logo Institucional -->
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center space-x-2 mb-2">
+          <div class="w-8 h-8 rounded-lg bg-transorense-verde flex items-center justify-center text-transorense-amarillo">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8m-8 5h8m-4 5h4M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
+            </svg>
+          </div>
+          <span class="font-montserrat font-extrabold text-lg text-transorense-verde dark:text-emerald-400">
+            TRANS<span class="text-transorense-amarillo">ORENSE</span>
+          </span>
+        </div>
+        <h3 class="text-xl font-bold font-montserrat text-slate-900 dark:text-white">
+          {{ modo() === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta de Cliente' }}
+        </h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          {{ modo() === 'login' ? 'Ingresa para comprar pasajes y rastrear encomiendas' : 'Regístrate para reservar asientos en tiempo real' }}
+        </p>
+      </div>
+
+      <!-- Selector de Pestañas: Login / Registro -->
+      <div class="flex p-1 mb-6 rounded-xl bg-slate-100 dark:bg-slate-700/50">
+        <button
+          type="button"
+          (click)="cambiarModo('login')"
+          class="flex-1 py-2 text-xs font-bold rounded-lg transition-all"
+          [ngClass]="modo() === 'login' ? 'bg-white dark:bg-slate-800 text-transorense-verde dark:text-emerald-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'"
+        >
+          Iniciar Sesión
+        </button>
+        <button
+          type="button"
+          (click)="cambiarModo('register')"
+          class="flex-1 py-2 text-xs font-bold rounded-lg transition-all"
+          [ngClass]="modo() === 'register' ? 'bg-white dark:bg-slate-800 text-transorense-verde dark:text-emerald-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'"
+        >
+          Registrarse
+        </button>
+      </div>
+
+      <!-- Botón de Google OAuth Oficial (Google Identity Services) -->
+      <div class="flex flex-col items-center justify-center mb-6">
+        <div id="btn-google-container" class="min-h-[44px]"></div>
+      </div>
+
+      <!-- Separador visual -->
+      <div class="relative flex py-2 items-center mb-6">
+        <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+        <span class="flex-shrink mx-4 text-xs font-medium text-slate-400 dark:text-slate-500 uppercase">o con correo</span>
+        <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+      </div>
+
+      <!-- Formulario 1: Login Local -->
+      <form *ngIf="modo() === 'login'" [formGroup]="formLogin" (ngSubmit)="onSubmitLogin()" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+            Correo Electrónico
+          </label>
+          <input
+            type="email"
+            formControlName="correo"
+            placeholder="ejemplo@correo.com"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-transorense-verde"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+            Contraseña
+          </label>
+          <input
+            type="password"
+            formControlName="password"
+            placeholder="••••••••"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-transorense-verde"
+          />
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="cargando()"
+          class="w-full btn-transorense-primary py-3 font-semibold text-sm rounded-xl disabled:opacity-50 flex items-center justify-center space-x-2"
+        >
+          <span *ngIf="!cargando()">Ingresar al Sistema</span>
+          <span *ngIf="cargando()">Iniciando sesión...</span>
+        </button>
+      </form>
+
+      <!-- Formulario 2: Registro Local -->
+      <form *ngIf="modo() === 'register'" [formGroup]="formRegister" (ngSubmit)="onSubmitRegister()" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+            Nombre Completo
+          </label>
+          <input
+            type="text"
+            formControlName="nombre"
+            placeholder="Juan Pérez"
+            class="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-transorense-verde"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+            Cédula Ecuatoriana (10 dígitos)
+          </label>
+          <input
+            type="text"
+            maxlength="10"
+            formControlName="cedula"
+            placeholder="0715432183"
+            class="w-full px-4 py-2 rounded-xl border bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-transorense-verde"
+            [ngClass]="formRegister.get('cedula')?.touched && formRegister.get('cedula')?.invalid ? 'border-rose-500' : 'border-slate-300 dark:border-slate-600'"
+          />
+          <span *ngIf="formRegister.get('cedula')?.touched && formRegister.get('cedula')?.errors?.['cedulaInvalida']" class="text-[11px] text-rose-500 block mt-0.5">
+            {{ formRegister.get('cedula')?.errors?.['mensaje'] }}
+          </span>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+            Correo Electrónico
+          </label>
+          <input
+            type="email"
+            formControlName="correo"
+            placeholder="juan@correo.com"
+            class="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-transorense-verde"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+            Contraseña
+          </label>
+          <input
+            type="password"
+            formControlName="password"
+            placeholder="Mínimo 6 caracteres"
+            class="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-transorense-verde"
+          />
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="cargando()"
+          class="w-full btn-transorense-primary py-2.5 font-semibold text-sm rounded-xl disabled:opacity-50 flex items-center justify-center space-x-2 mt-2"
+        >
+          <span *ngIf="!cargando()">Crear Cuenta</span>
+          <span *ngIf="cargando()">Registrando...</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
