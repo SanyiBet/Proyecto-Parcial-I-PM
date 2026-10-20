@@ -1,8 +1,8 @@
 <!-- Barra de Navegación Institucional TransOrense -->
-<header class="sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-200 shadow-sm">
+<header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-200 shadow-sm">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
     <!-- Logotipo y Nombre Institucional -->
-    <div class="flex items-center space-x-3">
+    <div class="flex items-center space-x-3 cursor-pointer" (click)="onVolverABuscador()">
       <div class="w-10 h-10 rounded-xl bg-transorense-verde flex items-center justify-center shadow-md shadow-transorense-verde/30">
         <svg class="w-6 h-6 text-transorense-amarillo" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8m-8 5h8m-4 5h4M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
@@ -18,162 +18,101 @@
       </div>
     </div>
 
-    <!-- Acciones de Cabecera: Selector de Tema Claro/Oscuro -->
-    <div class="flex items-center space-x-4">
+    <!-- Acciones de Cabecera: Selector de Tema y Botón de Usuario -->
+    <div class="flex items-center space-x-3 sm:space-x-4">
+      <!-- Selector de Tema Claro/Oscuro -->
       <button
         (click)="alternarTema()"
         type="button"
         class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all focus:outline-none focus:ring-2 focus:ring-transorense-verde"
         [title]="themeService.isDarkMode() ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro'"
       >
-        <!-- Ícono Sol (Modo Claro) -->
+        <!-- Ícono Sol -->
         <svg *ngIf="themeService.isDarkMode()" class="w-5 h-5 text-transorense-amarillo" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
         </svg>
-        <!-- Ícono Luna (Modo Oscuro) -->
+        <!-- Ícono Luna -->
         <svg *ngIf="!themeService.isDarkMode()" class="w-5 h-5 text-transorense-azul" fill="currentColor" viewBox="0 0 20 20">
           <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
         </svg>
       </button>
 
-      <span class="text-xs font-medium text-slate-500 dark:text-slate-400">
-        {{ themeService.isDarkMode() ? 'Modo Oscuro' : 'Modo Claro' }}
-      </span>
+      <!-- Estado No Autenticado -->
+      <button
+        *ngIf="!authService.estaAutenticado()"
+        (click)="abrirModalAuth()"
+        class="btn-transorense-primary text-xs sm:text-sm flex items-center space-x-2"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+        </svg>
+        <span>Iniciar Sesión</span>
+      </button>
+
+      <!-- Estado Autenticado -->
+      <div *ngIf="authService.estaAutenticado()" class="flex items-center space-x-3">
+        <div class="hidden sm:flex flex-col text-right">
+          <span class="text-xs font-bold text-slate-800 dark:text-slate-100">
+            {{ authService.usuarioActual()?.nombre }}
+          </span>
+          <span class="text-[10px] text-transorense-verde font-semibold capitalize">
+            {{ authService.usuarioActual()?.roles?.[0] }}
+          </span>
+        </div>
+        <button
+          (click)="cerrarSesion()"
+          class="p-2 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900 transition-colors"
+          title="Cerrar Sesión"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 </header>
 
-<!-- Contenedor Principal -->
+<!-- Contenido Principal -->
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-  <!-- Banner de Bienvenida Institucional -->
-  <section class="bg-gradient-to-r from-transorense-verde to-emerald-800 dark:from-slate-800 dark:to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-xl mb-10 relative overflow-hidden">
+  <!-- Banner Institucional (Visible en el buscador) -->
+  <section *ngIf="!viajeActivo()" class="bg-gradient-to-r from-transorense-verde to-emerald-800 dark:from-slate-800 dark:to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-xl mb-10 relative overflow-hidden">
     <div class="relative z-10 max-w-3xl">
       <div class="inline-flex items-center space-x-2 bg-transorense-amarillo/20 text-transorense-amarillo text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full mb-4 border border-transorense-amarillo/30">
-        <span>Sprint Día 2</span>
+        <span>Cooperativa TransOrense</span>
         <span>•</span>
-        <span>Seguridad & Sistema de Diseño</span>
+        <span>Pasajes & Encomiendas</span>
       </div>
       <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight font-montserrat mb-3">
-        Cooperativa de Transporte Interprovincial TransOrense
+        Viaja Seguro por las Rutas del Ecuador
       </h1>
       <p class="text-emerald-100 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
-        Sistema oficial de reserva de boletos con control de concurrencia y rastreo seguro de encomiendas. Conectando Machala, Guayaquil, Quito, Cuenca y Loja.
+        Elige tu horario favorito y reserva tus asientos con bloqueo en tiempo real de 10 minutos. Conectamos Machala, Guayaquil, Cuenca, Loja y Quito con el mejor confort.
       </p>
     </div>
-    <!-- Decoración de fondo de marca -->
     <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-transorense-amarillo/10 rounded-full blur-3xl pointer-events-none"></div>
   </section>
 
-  <!-- Demostración Interactiva del Sistema de Diseño (CARD-10 y CARD-11) -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-    <!-- Tarjeta 1: Validador Módulo 10 en Vivo -->
-    <div class="bg-white dark:bg-slate-800/90 rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-sm transition-colors">
-      <div class="flex items-center space-x-3 mb-4">
-        <div class="w-10 h-10 rounded-xl bg-transorense-verde/10 dark:bg-emerald-900/30 flex items-center justify-center text-transorense-verde dark:text-emerald-400">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-          </svg>
-        </div>
-        <div>
-          <h2 class="text-xl font-bold font-montserrat text-slate-800 dark:text-white">
-            Validador de Cédula Ecuatoriana
-          </h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400">Algoritmo Módulo 10 del Registro Civil</p>
-        </div>
-      </div>
+  <!-- Vista 1: Buscador Público de Viajes y Horarios (CARD-15) -->
+  <app-buscador-viajes
+    *ngIf="!viajeActivo()"
+    (viajeSeleccionado)="onViajeSeleccionado($event)"
+  ></app-buscador-viajes>
 
-      <p class="text-sm text-slate-600 dark:text-slate-300 mb-4">
-        Prueba en vivo la validación matemática de cédulas requerida para compras de pasajes y envíos de encomiendas:
-      </p>
+  <!-- Vista 2: Mapa Interactivo de Asientos y Temporizador de 10 min (CARD-16) -->
+  <app-mapa-asientos
+    *ngIf="viajeActivo()"
+    [viaje]="viajeActivo()!"
+    (volver)="onVolverABuscador()"
+    (solicitarLogin)="abrirModalAuth()"
+  ></app-mapa-asientos>
 
-      <div class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1">
-            Número de Cédula (10 dígitos)
-          </label>
-          <input
-            type="text"
-            maxlength="10"
-            [(ngModel)]="cedulaPrueba"
-            (input)="probarValidacionCedula()"
-            placeholder="Ej: 0715432183 (El Oro)"
-            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-transorense-verde transition-all"
-          />
-        </div>
-
-        <!-- Feedback de validación -->
-        <div *ngIf="resultadoCedula" [ngClass]="resultadoCedula.esValida ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300' : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300'" class="p-4 rounded-xl border flex items-center space-x-3 text-sm transition-all">
-          <svg *ngIf="resultadoCedula.esValida" class="w-5 h-5 flex-shrink-0 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-          </svg>
-          <svg *ngIf="!resultadoCedula.esValida" class="w-5 h-5 flex-shrink-0 text-rose-600 dark:text-rose-400" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-          </svg>
-          <span class="font-medium">{{ resultadoCedula.mensaje }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tarjeta 2: Diálogos Institucionales SweetAlert2 -->
-    <div class="bg-white dark:bg-slate-800/90 rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-sm transition-colors">
-      <div class="flex items-center space-x-3 mb-4">
-        <div class="w-10 h-10 rounded-xl bg-transorense-amarillo/20 flex items-center justify-center text-transorense-amarillo">
-          <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-          </svg>
-        </div>
-        <div>
-          <h2 class="text-xl font-bold font-montserrat text-slate-800 dark:text-white">
-            Servicio Centralizado SweetAlert2
-          </h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400">Notificaciones y modales con identidad corporativa</p>
-        </div>
-      </div>
-
-      <p class="text-sm text-slate-600 dark:text-slate-300 mb-6">
-        Modales institucionales con tipografía Montserrat y paleta oficial para confirmaciones y alertas de la cooperativa:
-      </p>
-
-      <div class="flex flex-wrap gap-4">
-        <button
-          (click)="probarAlertaExito()"
-          class="btn-transorense-primary text-sm flex items-center space-x-2"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-          </svg>
-          <span>Modal de Éxito</span>
-        </button>
-
-        <button
-          (click)="probarConfirmacion()"
-          class="btn-transorense-accent text-sm flex items-center space-x-2"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>Modal Confirmación</span>
-        </button>
-      </div>
-
-      <!-- Muestra de Paleta de Colores Institucional -->
-      <div class="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
-        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 block mb-3">
-          Paleta Oficial TransOrense
-        </span>
-        <div class="grid grid-cols-5 gap-2 text-center text-[10px] font-bold">
-          <div class="p-2 rounded-lg bg-transorense-verde text-white">#00875A<br/>Verde</div>
-          <div class="p-2 rounded-lg bg-transorense-amarillo text-slate-900">#FFCC00<br/>Amarillo</div>
-          <div class="p-2 rounded-lg bg-transorense-azul text-white">#003399<br/>Azul</div>
-          <div class="p-2 rounded-lg bg-white border border-slate-300 text-slate-800">#FFFFFF<br/>Blanco</div>
-          <div class="p-2 rounded-lg bg-transorense-crema border border-amber-200 text-slate-800">#FDFBF7<br/>Crema</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Router Outlet para futuras vistas del Día 3 -->
-  <div class="mt-8">
-    <router-outlet></router-outlet>
-  </div>
+  <router-outlet></router-outlet>
 </main>
+
+<!-- Modal de Autenticación Flotante (CARD-12) -->
+<app-auth-modal
+  *ngIf="mostrarModalAuth()"
+  (cerrar)="cerrarModalAuth()"
+  (loginExitoso)="onLoginExitoso()"
+></app-auth-modal>

@@ -1,0 +1,188 @@
+<div class="space-y-8">
+  <!-- Formulario de Búsqueda de Viajes -->
+  <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 dark:border-slate-700 transition-colors">
+    <div class="flex items-center space-x-3 mb-6">
+      <div class="w-10 h-10 rounded-2xl bg-transorense-verde/10 dark:bg-emerald-900/30 flex items-center justify-center text-transorense-verde dark:text-emerald-400">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-xl sm:text-2xl font-bold font-montserrat text-slate-900 dark:text-white">
+          Buscar Horarios y Boletos
+        </h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Consulta frecuencias interprovinciales en tiempo real</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+      <!-- Selector de Origen -->
+      <div class="md:col-span-4">
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+          Terminal de Origen
+        </label>
+        <div class="relative">
+          <select
+            [(ngModel)]="origenSeleccionado"
+            class="w-full px-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-transorense-verde transition-all appearance-none cursor-pointer"
+          >
+            <option *ngFor="let ciudad of origenes()" [value]="ciudad">{{ ciudad }}</option>
+          </select>
+          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botón de Invertir Rutas -->
+      <div class="md:col-span-1 flex justify-center pb-1">
+        <button
+          type="button"
+          (click)="invertirCiudades()"
+          class="p-2.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-transorense-amarillo/20 hover:text-amber-600 transition-all border border-slate-200 dark:border-slate-600"
+          title="Invertir origen y destino"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Selector de Destino -->
+      <div class="md:col-span-4">
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+          Terminal de Destino
+        </label>
+        <div class="relative">
+          <select
+            [(ngModel)]="destinoSeleccionado"
+            class="w-full px-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-transorense-verde transition-all appearance-none cursor-pointer"
+          >
+            <option *ngFor="let ciudad of destinos()" [value]="ciudad">{{ ciudad }}</option>
+          </select>
+          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botón de Búsqueda -->
+      <div class="md:col-span-3">
+        <button
+          type="button"
+          (click)="buscar()"
+          [disabled]="cargando()"
+          class="w-full btn-transorense-primary py-3 rounded-2xl text-sm font-bold flex items-center justify-center space-x-2"
+        >
+          <svg *ngIf="!cargando()" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <span *ngIf="!cargando()">Buscar Frecuencias</span>
+          <span *ngIf="cargando()">Buscando...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Listado de Resultados de Viajes -->
+  <div *ngIf="cargando()" class="text-center py-12">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-transorense-verde border-t-transparent"></div>
+    <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">Consultando viajes en tiempo real...</p>
+  </div>
+
+  <div *ngIf="!cargando() && busquedaRealizada() && viajes().length === 0" class="bg-white dark:bg-slate-800 rounded-3xl p-12 text-center border border-slate-200 dark:border-slate-700">
+    <div class="w-16 h-16 mx-auto rounded-3xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
+      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+    </div>
+    <h3 class="text-lg font-bold font-montserrat text-slate-800 dark:text-white">No hay viajes programados</h3>
+    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+      No se encontraron frecuencias para la ruta {{ origenSeleccionado }} ➔ {{ destinoSeleccionado }}. Prueba con Machala ➔ Guayaquil.
+    </p>
+  </div>
+
+  <!-- Tarjetas de Horarios Disponibles -->
+  <div *ngIf="!cargando() && viajes().length > 0" class="space-y-4">
+    <h3 class="font-montserrat font-bold text-lg text-slate-800 dark:text-white flex items-center justify-between">
+      <span>Horarios Disponibles ({{ viajes().length }})</span>
+      <span class="text-xs font-normal text-slate-500 dark:text-slate-400">Ruta oficial TransOrense</span>
+    </h3>
+
+    <div
+      *ngFor="let viaje of viajes()"
+      class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-7 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-6"
+    >
+      <!-- Información de Salida / Llegada y Duración -->
+      <div class="flex items-center space-x-6">
+        <div class="text-center min-w-[70px]">
+          <span class="text-2xl font-black font-montserrat text-slate-900 dark:text-white block">
+            {{ viaje.salida | date: 'HH:mm' }}
+          </span>
+          <span class="text-[11px] font-bold text-transorense-verde uppercase block">Salida</span>
+        </div>
+
+        <div class="flex flex-col items-center px-4">
+          <span class="text-[10px] font-bold text-slate-400 mb-1">
+            {{ viaje.ruta.duracion_minutos / 60 }}h aprox
+          </span>
+          <div class="w-24 sm:w-32 h-0.5 bg-slate-300 dark:bg-slate-600 relative">
+            <div class="absolute -top-1.5 left-0 w-3 h-3 rounded-full bg-transorense-verde"></div>
+            <div class="absolute -top-1.5 right-0 w-3 h-3 rounded-full bg-transorense-amarillo"></div>
+          </div>
+          <span class="text-[10px] text-slate-400 mt-1">Directo</span>
+        </div>
+
+        <div class="text-center min-w-[70px]">
+          <span class="text-2xl font-black font-montserrat text-slate-900 dark:text-white block">
+            {{ viaje.llegada_estimada | date: 'HH:mm' }}
+          </span>
+          <span class="text-[11px] font-bold text-slate-400 uppercase block">Llegada</span>
+        </div>
+      </div>
+
+      <!-- Información del Bus y Asientos Libres -->
+      <div class="border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-700 pt-4 md:pt-0 md:pl-6 flex-1">
+        <div class="flex items-center space-x-2">
+          <span class="font-bold text-sm text-slate-800 dark:text-white font-montserrat">
+            {{ viaje.bus.descripcion }}
+          </span>
+          <span class="text-xs px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-mono">
+            {{ viaje.bus.placa }}
+          </span>
+        </div>
+        <div class="mt-2 flex items-center space-x-3 text-xs">
+          <span class="badge-disponible px-2.5 py-1 rounded-full font-bold flex items-center space-x-1">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>{{ viaje.asientos_disponibles }} asientos disponibles</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Precio y Botón de Selección de Asientos -->
+      <div class="flex items-center justify-between md:flex-col md:items-end space-y-2 border-t md:border-t-0 border-slate-100 dark:border-slate-700/50 pt-4 md:pt-0">
+        <div class="text-right">
+          <span class="text-xs text-slate-400 block font-medium">Por pasaje</span>
+          <span class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-montserrat">
+            ${{ viaje.precio | number: '1.2-2' }}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          (click)="seleccionar(viaje)"
+          class="btn-transorense-accent text-xs sm:text-sm font-bold px-5 py-2.5 rounded-xl shadow-md flex items-center space-x-2"
+        >
+          <span>Elegir Asientos</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

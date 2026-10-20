@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 
-// Declaración global de SweetAlert2 inyectado vía CDN en index.html
 declare const Swal: any;
 
 @Injectable({
@@ -9,12 +8,8 @@ declare const Swal: any;
 export class SweetAlertService {
   private readonly COLOR_VERDE = '#00875A';
   private readonly COLOR_AMARILLO = '#FFCC00';
-  private readonly COLOR_AZUL = '#003399';
   private readonly COLOR_ROJO = '#DC2626';
 
-  /**
-   * Muestra un modal de éxito institucional
-   */
   public async exito(titulo: string, mensaje: string = ''): Promise<void> {
     if (typeof Swal === 'undefined') {
       alert(`✅ ${titulo}\n${mensaje}`);
@@ -34,9 +29,6 @@ export class SweetAlertService {
     });
   }
 
-  /**
-   * Muestra un modal de error institucional
-   */
   public async error(titulo: string, mensaje: string = ''): Promise<void> {
     if (typeof Swal === 'undefined') {
       alert(`❌ ${titulo}\n${mensaje}`);
@@ -56,9 +48,6 @@ export class SweetAlertService {
     });
   }
 
-  /**
-   * Muestra un modal de advertencia institucional
-   */
   public async advertencia(titulo: string, mensaje: string = ''): Promise<void> {
     if (typeof Swal === 'undefined') {
       alert(`⚠️ ${titulo}\n${mensaje}`);
@@ -78,9 +67,6 @@ export class SweetAlertService {
     });
   }
 
-  /**
-   * Modal interactivo de confirmación con retorno booleano
-   */
   public async confirmar(
     titulo: string,
     mensaje: string,
@@ -110,9 +96,6 @@ export class SweetAlertService {
     return resultado.isConfirmed;
   }
 
-  /**
-   * Notificación Toast flotante no intrusiva con auto-cierre
-   */
   public toast(
     tipo: 'success' | 'error' | 'warning' | 'info',
     mensaje: string,

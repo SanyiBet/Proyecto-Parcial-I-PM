@@ -8,13 +8,11 @@ export type ThemeMode = 'light' | 'dark';
 export class ThemeService {
   private readonly THEME_KEY = 'transorense_theme';
 
-  // Signal reactivo para el estado del tema
   public isDarkMode = signal<boolean>(false);
 
   constructor() {
     this.inicializarTema();
 
-    // Sincronizar cambios del signal con el DOM y localStorage
     effect(() => {
       const dark = this.isDarkMode();
       if (typeof document !== 'undefined') {
@@ -40,7 +38,6 @@ export class ThemeService {
     if (temaGuardado) {
       this.isDarkMode.set(temaGuardado === 'dark');
     } else {
-      // Detección automática de la preferencia del sistema operativo del usuario
       const prefiereOscuro = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
       this.isDarkMode.set(prefiereOscuro);
     }

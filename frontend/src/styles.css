@@ -53,9 +53,12 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Montserrat', sans-serif;
   font-weight: 600;
   padding: 0.625rem 1.25rem;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   transition: all 0.2s ease-in-out;
   box-shadow: 0 2px 4px rgba(0, 135, 90, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-transorense-primary:hover {
@@ -70,9 +73,12 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Montserrat', sans-serif;
   font-weight: 700;
   padding: 0.625rem 1.25rem;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   transition: all 0.2s ease-in-out;
   box-shadow: 0 2px 4px rgba(255, 204, 0, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-transorense-accent:hover {
