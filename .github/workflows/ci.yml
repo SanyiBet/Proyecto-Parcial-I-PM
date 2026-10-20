@@ -53,9 +53,9 @@ jobs:
       - name: Instalar dependencias del Backend
         run: |
           cd backend
-          npm ci
+          npm install
 
-      - name: Validar sintaxis del Backend
+      - name: Ejecutar pruebas unitarias automatizadas del Backend
         run: |
           cd backend
-          node -e "console.log('Sintaxis y dependencias del backend verificadas con éxito');"
+          npm test
