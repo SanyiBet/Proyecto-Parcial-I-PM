@@ -34,6 +34,15 @@ app.get("/api/health", async (req, res) => {
   });
 });
 
+// Rutas de los módulos
+const authRoutes = require("./routes/auth.routes");
+const viajesRoutes = require("./routes/viajes.routes");
+const reservasRoutes = require("./routes/reservas.routes");
+
+app.use("/api/auth", authRoutes);
+app.use("/api/viajes", viajesRoutes);
+app.use("/api/reservas", reservasRoutes);
+
 // Manejo centralizado de rutas no encontradas (404)
 app.use((req, res) => {
   res.status(404).json({

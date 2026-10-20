@@ -2,7 +2,7 @@
 <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-200 shadow-sm">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
     <!-- Logotipo y Nombre Institucional -->
-    <div class="flex items-center space-x-3">
+    <div class="flex items-center space-x-3 cursor-pointer" (click)="onVolverABuscador()">
       <div class="w-10 h-10 rounded-xl bg-transorense-verde flex items-center justify-center shadow-md shadow-transorense-verde/30">
         <svg class="w-6 h-6 text-transorense-amarillo" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8m-8 5h8m-4 5h4M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
@@ -37,7 +37,7 @@
         </svg>
       </button>
 
-      <!-- Estado No Autenticado: Botón Iniciar Sesión -->
+      <!-- Estado No Autenticado -->
       <button
         *ngIf="!authService.estaAutenticado()"
         (click)="abrirModalAuth()"
@@ -49,13 +49,13 @@
         <span>Iniciar Sesión</span>
       </button>
 
-      <!-- Estado Autenticado: Información de Usuario y Cerrar Sesión -->
+      <!-- Estado Autenticado -->
       <div *ngIf="authService.estaAutenticado()" class="flex items-center space-x-3">
-        <div class="hidden md:flex flex-col text-right">
+        <div class="hidden sm:flex flex-col text-right">
           <span class="text-xs font-bold text-slate-800 dark:text-slate-100">
             {{ authService.usuarioActual()?.nombre }}
           </span>
-          <span class="text-[10px] text-slate-400 capitalize">
+          <span class="text-[10px] text-transorense-verde font-semibold capitalize">
             {{ authService.usuarioActual()?.roles?.[0] }}
           </span>
         </div>
@@ -73,143 +73,40 @@
   </div>
 </header>
 
-<!-- Contenedor Principal -->
+<!-- Contenido Principal -->
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-  <!-- Banner de Bienvenida Institucional -->
-  <section class="bg-gradient-to-r from-transorense-verde to-emerald-800 dark:from-slate-800 dark:to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-xl mb-10 relative overflow-hidden">
+  <!-- Banner Institucional (Visible en el buscador) -->
+  <section *ngIf="!viajeActivo()" class="bg-gradient-to-r from-transorense-verde to-emerald-800 dark:from-slate-800 dark:to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-xl mb-10 relative overflow-hidden">
     <div class="relative z-10 max-w-3xl">
       <div class="inline-flex items-center space-x-2 bg-transorense-amarillo/20 text-transorense-amarillo text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full mb-4 border border-transorense-amarillo/30">
-        <span>Sprint Día 3</span>
+        <span>Cooperativa TransOrense</span>
         <span>•</span>
-        <span>Autenticación Clientes, Viajes & Reservas</span>
+        <span>Pasajes & Encomiendas</span>
       </div>
       <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight font-montserrat mb-3">
-        Cooperativa de Transporte Interprovincial TransOrense
+        Viaja Seguro por las Rutas del Ecuador
       </h1>
       <p class="text-emerald-100 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
-        Venta de pasajes interprovinciales con selección interactiva de asientos en tiempo real (TTL 10 min) y autenticación segura con Google Identity Services y RBAC.
+        Elige tu horario favorito y reserva tus asientos con bloqueo en tiempo real de 10 minutos. Conectamos Machala, Guayaquil, Cuenca, Loja y Quito con el mejor confort.
       </p>
-
-      <!-- Botón de apertura de login rápido si no ha iniciado sesión -->
-      <div *ngIf="!authService.estaAutenticado()" class="mt-6">
-        <button
-          (click)="abrirModalAuth()"
-          class="btn-transorense-accent text-sm inline-flex items-center space-x-2"
-        >
-          <span>Ingresar o Registrarse para Comprar</span>
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-          </svg>
-        </button>
-      </div>
     </div>
     <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-transorense-amarillo/10 rounded-full blur-3xl pointer-events-none"></div>
   </section>
 
-  <!-- Panel de Demostraciones del Sistema -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-    <!-- Tarjeta 1: Autenticación y Estado de Sesión (CARD-12) -->
-    <div class="bg-white dark:bg-slate-800/90 rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-sm transition-colors">
-      <div class="flex items-center space-x-3 mb-4">
-        <div class="w-10 h-10 rounded-xl bg-transorense-azul/10 dark:bg-blue-900/30 flex items-center justify-center text-transorense-azul dark:text-blue-400">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-        </div>
-        <div>
-          <h2 class="text-xl font-bold font-montserrat text-slate-800 dark:text-white">
-            Autenticación Google & Local (CARD-12)
-          </h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400">Google Identity Services + Argon2id + JWT RBAC</p>
-        </div>
-      </div>
+  <!-- Vista 1: Buscador Público de Viajes y Horarios (CARD-15) -->
+  <app-buscador-viajes
+    *ngIf="!viajeActivo()"
+    (viajeSeleccionado)="onViajeSeleccionado($event)"
+  ></app-buscador-viajes>
 
-      <div *ngIf="!authService.estaAutenticado()" class="space-y-4">
-        <p class="text-sm text-slate-600 dark:text-slate-300">
-          Accede al sistema para comprobar el flujo de Google Identity Services con el botón oficial o mediante credenciales locales con validación algorítmica de cédula:
-        </p>
-        <button
-          (click)="abrirModalAuth()"
-          class="w-full btn-transorense-primary text-sm flex items-center justify-center space-x-2 py-3"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-          <span>Abrir Modal de Acceso / Registro</span>
-        </button>
-      </div>
+  <!-- Vista 2: Mapa Interactivo de Asientos y Temporizador de 10 min (CARD-16) -->
+  <app-mapa-asientos
+    *ngIf="viajeActivo()"
+    [viaje]="viajeActivo()!"
+    (volver)="onVolverABuscador()"
+    (solicitarLogin)="abrirModalAuth()"
+  ></app-mapa-asientos>
 
-      <div *ngIf="authService.estaAutenticado()" class="space-y-3 bg-emerald-50 dark:bg-emerald-950/30 p-4 rounded-xl border border-emerald-200 dark:border-emerald-800">
-        <div class="flex items-center space-x-2 text-emerald-700 dark:text-emerald-400 font-bold text-sm">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-          </svg>
-          <span>Sesión Activa</span>
-        </div>
-        <div class="text-xs space-y-1 text-slate-700 dark:text-slate-300">
-          <p><span class="font-semibold">Nombre:</span> {{ authService.usuarioActual()?.nombre }}</p>
-          <p><span class="font-semibold">Correo:</span> {{ authService.usuarioActual()?.correo }}</p>
-          <p><span class="font-semibold">Cédula:</span> {{ authService.usuarioActual()?.cedula || 'No vinculada' }}</p>
-          <p><span class="font-semibold">Roles:</span> {{ authService.usuarioActual()?.roles?.join(', ') }}</p>
-          <p><span class="font-semibold">Método:</span> {{ authService.usuarioActual()?.metodo_auth }}</p>
-        </div>
-        <button
-          (click)="cerrarSesion()"
-          class="text-xs text-rose-600 hover:text-rose-700 font-bold underline"
-        >
-          Cerrar Sesión
-        </button>
-      </div>
-    </div>
-
-    <!-- Tarjeta 2: Validador Cédula y Diálogos Institucionales -->
-    <div class="bg-white dark:bg-slate-800/90 rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-sm transition-colors">
-      <div class="flex items-center space-x-3 mb-4">
-        <div class="w-10 h-10 rounded-xl bg-transorense-verde/10 dark:bg-emerald-900/30 flex items-center justify-center text-transorense-verde dark:text-emerald-400">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-          </svg>
-        </div>
-        <div>
-          <h2 class="text-xl font-bold font-montserrat text-slate-800 dark:text-white">
-            Validador Módulo 10 & Alertas
-          </h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400">SweetAlert2 y Validación Reactiva</p>
-        </div>
-      </div>
-
-      <div class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1">
-            Validar Cédula Ecuatoriana
-          </label>
-          <input
-            type="text"
-            maxlength="10"
-            [(ngModel)]="cedulaPrueba"
-            (input)="probarValidacionCedula()"
-            placeholder="Ej: 0715432183 (El Oro)"
-            class="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-transorense-verde"
-          />
-        </div>
-
-        <div *ngIf="resultadoCedula" [ngClass]="resultadoCedula.esValida ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border-rose-200'" class="p-3 rounded-xl border text-xs font-medium">
-          {{ resultadoCedula.mensaje }}
-        </div>
-
-        <div class="flex space-x-3 pt-2">
-          <button (click)="probarAlertaExito()" class="btn-transorense-primary text-xs flex-1">
-            Alerta de Éxito
-          </button>
-          <button (click)="probarConfirmacion()" class="btn-transorense-accent text-xs flex-1">
-            Confirmación
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Router Outlet -->
   <router-outlet></router-outlet>
 </main>
 
