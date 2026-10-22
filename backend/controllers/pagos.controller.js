@@ -262,8 +262,149 @@ async function listarPagosPendientes(req, res, next) {
   }
 }
 
+const { liberarAsiento } = require("../database/redis");
+
+/**
+ * POST /api/pagos/:id/aprobar
+ * Aprueba el pago bancario, confirmando definitivamente la reserva y liberando el boleto.
+ * Protegido para rol 'agente_boleteria' o 'administrador' (CARD-19).
+ */
+async function aprobarPago(req, res, next) {
+  try {
+    const { id } = req.params;
+    const db = obtenerDB();
+    const ahora = new Date();
+    const agenteId = req.usuario?.sub || "sistema";
+
+    const pago = await db.collection("pagos").findOne({ _id: id });
+    if (!pago) {
+      return res.status(404).json({ error: "Pago no encontrado", mensaje: `No existe el pago con ID ${id}` });
+    }
+
+    if (pago.estado === "aprobado") {
+      return res.status(400).json({ error: "Pago ya aprobado", mensaje: "Este pago ya fue aprobado previamente." });
+    }
+
+    // 1. Actualizar el pago a 'aprobado'
+    await db.collection("pagos").updateOne(
+      { _id: id },
+      {
+        $set: {
+          estado: "aprobado",
+          verificado_por: agenteId,
+          verificado_en: ahora,
+        },
+      }
+    );
+
+    // 2. Identificar todas las reservas afectadas
+    const idsReservas = Array.isArray(pago.reservas_asociadas) && pago.reservas_asociadas.length > 0
+      ? pago.reservas_asociadas
+      : [pago.reserva_id];
+
+    // 3. Confirmar definitivamente las reservas en MongoDB Atlas
+    await db.collection("reservas").updateMany(
+      { _id: { $in: idsReservas } },
+      {
+        $set: {
+          estado: "confirmada",
+          actualizada_en: ahora,
+        },
+      }
+    );
+
+    return res.status(200).json({
+      mensaje: "Pago aprobado exitosamente. Reserva y pasajes confirmados de manera definitiva.",
+      pago_id: id,
+      estado: "aprobado",
+      reservas_confirmadas: idsReservas,
+      verificado_en: ahora,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * POST /api/pagos/:id/rechazar
+ * Rechaza el pago bancario, cancela la reserva y libera los asientos en Redis.
+ * Protegido para rol 'agente_boleteria' o 'administrador' (CARD-19).
+ */
+async function rechazarPago(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { motivo } = req.body;
+    const db = obtenerDB();
+    const ahora = new Date();
+    const agenteId = req.usuario?.sub || "sistema";
+
+    const pago = await db.collection("pagos").findOne({ _id: id });
+    if (!pago) {
+      return res.status(404).json({ error: "Pago no encontrado", mensaje: `No existe el pago con ID ${id}` });
+    }
+
+    if (pago.estado === "rechazado") {
+      return res.status(400).json({ error: "Pago ya rechazado", mensaje: "Este pago ya fue rechazado anteriormente." });
+    }
+
+    // 1. Actualizar el pago a 'rechazado' con motivo
+    await db.collection("pagos").updateOne(
+      { _id: id },
+      {
+        $set: {
+          estado: "rechazado",
+          motivo_rechazo: motivo || "Comprobante bancario no coincide o valor incompleto.",
+          verificado_por: agenteId,
+          verificado_en: ahora,
+        },
+      }
+    );
+
+    // 2. Identificar las reservas para cancelarlas y liberar asientos
+    const idsReservas = Array.isArray(pago.reservas_asociadas) && pago.reservas_asociadas.length > 0
+      ? pago.reservas_asociadas
+      : [pago.reserva_id];
+
+    const reservas = await db.collection("reservas").find({ _id: { $in: idsReservas } }).toArray();
+
+    // 3. Cancelar reservas en MongoDB
+    await db.collection("reservas").updateMany(
+      { _id: { $in: idsReservas } },
+      {
+        $set: {
+          estado: "cancelada",
+          actualizada_en: ahora,
+        },
+      }
+    );
+
+    // 4. Liberar bloqueo en Redis si estaba reservado
+    for (const r of reservas) {
+      if (r.viaje_id && r.asiento_numero) {
+        try {
+          await liberarAsiento(r.viaje_id, r.asiento_numero);
+        } catch (e) {
+          console.warn("Aviso al liberar asiento en Redis:", e.message);
+        }
+      }
+    }
+
+    return res.status(200).json({
+      mensaje: "Pago rechazado exitosamente. Reservas canceladas y asientos liberados.",
+      pago_id: id,
+      estado: "rechazado",
+      motivo_rechazo: motivo || "Comprobante no válido",
+      verificado_en: ahora,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   registrarPago,
   obtenerPagoPorReserva,
   listarPagosPendientes,
+  aprobarPago,
+  rechazarPago,
 };

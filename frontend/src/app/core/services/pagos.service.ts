@@ -60,4 +60,26 @@ export class PagosService {
       headers: this.getAuthHeaders(),
     });
   }
+
+  public obtenerPagosPendientes(): Observable<{ pagos: any[] }> {
+    return this.http.get<{ pagos: any[] }>(`${this.apiPagos}/pendientes`, {
+      headers: this.getAuthHeaders(),
+    });
+  }
+
+  public aprobarPago(pagoId: string): Observable<{ mensaje: string; pago_id: string; estado: string }> {
+    return this.http.post<{ mensaje: string; pago_id: string; estado: string }>(
+      `${this.apiPagos}/${pagoId}/aprobar`,
+      {},
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  public rechazarPago(pagoId: string, motivo: string): Observable<{ mensaje: string; pago_id: string; estado: string }> {
+    return this.http.post<{ mensaje: string; pago_id: string; estado: string }>(
+      `${this.apiPagos}/${pagoId}/rechazar`,
+      { motivo },
+      { headers: this.getAuthHeaders() }
+    );
+  }
 }
