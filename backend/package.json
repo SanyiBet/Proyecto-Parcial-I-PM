@@ -11,7 +11,8 @@
     "test:card06": "node tests/test-card06.js",
     "test:card07": "node tests/test-card07.js",
     "test:card08-09": "node tests/test-card08-09.js",
-    "test": "node tests/test-card06.js && node tests/test-card07.js && node tests/test-card08-09.js"
+    "test:card17": "node tests/test-card17.js",
+    "test": "node tests/test-card06.js && node tests/test-card07.js && node tests/test-card08-09.js && node tests/test-card17.js"
   },
   "keywords": [],
   "author": "",
