@@ -410,6 +410,182 @@ async function obtenerEncomiendaPorId(req, res, next) {
   }
 }
 
+/**
+ * Enmascara un nombre para proteger la privacidad en consultas públicas (LOPDP)
+ * Ejemplo: "Carlos Perez" -> "Carlos P."
+ */
+function enmascararNombre(nombreCompleto) {
+  if (!nombreCompleto) return "Anónimo";
+  const partes = String(nombreCompleto).trim().split(/\s+/);
+  if (partes.length === 1) return partes[0];
+  return `${partes[0]} ${partes[1].charAt(0).toUpperCase()}***`;
+}
+
+/**
+ * GET /api/encomiendas/rastreo/:codigo
+ * Endpoint PÚBLICO para rastreo de paquetes en tiempo real (CARD-21).
+ * Protege datos personales de acuerdo con la Ley Orgánica de Protección de Datos Personales (LOPDP).
+ */
+async function rastrearEncomiendaPublico(req, res, next) {
+  try {
+    const { codigo } = req.params;
+    if (!codigo || !codigo.trim()) {
+      return res.status(400).json({
+        error: "Código requerido",
+        mensaje: "Debe ingresar el código de rastreo de su encomienda",
+      });
+    }
+
+    const codigoNormalizado = String(codigo).trim().toUpperCase();
+    const db = obtenerDB();
+
+    const encomienda = await db.collection("encomiendas").findOne({
+      codigo_rastreo: codigoNormalizado,
+    });
+
+    if (!encomienda) {
+      return res.status(404).json({
+        error: "Guía no encontrada",
+        mensaje: `No existe ninguna encomienda registrada con el código '${codigoNormalizado}'. Verifique su comprobante e intente de nuevo.`,
+      });
+    }
+
+    // Obtener cronología de eventos
+    const eventos = await db
+      .collection("historial_encomienda")
+      .find({ encomienda_id: encomienda._id })
+      .sort({ fecha: 1 })
+      .toArray();
+
+    const lineaDeTiempo = eventos.map((e) => ({
+      estado: e.estado,
+      ubicacion: e.ubicacion || "En tránsito",
+      observacion: e.observacion || "Movimiento registrado",
+      fecha: e.fecha,
+    }));
+
+    return res.status(200).json({
+      rastreo: {
+        codigo_rastreo: encomienda.codigo_rastreo,
+        estado_actual: encomienda.estado,
+        origen: encomienda.origen,
+        destino: encomienda.destino,
+        creada_en: encomienda.creada_en,
+        peso_kg: Number(encomienda.peso_kg),
+        // Datos protegidos: sin cédula ni teléfono para consultas públicas
+        remitente: enmascararNombre(encomienda.remitente?.nombre),
+        destinatario: enmascararNombre(encomienda.destinatario?.nombre),
+        linea_de_tiempo: lineaDeTiempo,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * POST /api/encomiendas/:id/movimientos
+ * Endpoint PROTEGIDO para que el Operador o Administrador registre hitos y traslados físicos (CARD-21).
+ */
+async function registrarMovimientoEncomienda(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { nuevo_estado, ubicacion, observacion } = req.body;
+
+    const ESTADOS_VALIDOS = [
+      "recibida",
+      "en_transito",
+      "en_destino",
+      "en_reparto",
+      "entregada",
+      "incidencia",
+      "cancelada",
+    ];
+
+    if (!nuevo_estado || !ESTADOS_VALIDOS.includes(nuevo_estado)) {
+      return res.status(400).json({
+        error: "Estado no válido",
+        mensaje: `El estado debe ser uno de los siguientes: ${ESTADOS_VALIDOS.join(", ")}`,
+      });
+    }
+
+    if (!ubicacion || !ubicacion.trim()) {
+      return res.status(400).json({
+        error: "Ubicación requerida",
+        mensaje: "Debe indicar la ubicación física actual del paquete (ej: Agencia Guayaquil)",
+      });
+    }
+
+    const db = obtenerDB();
+    const ahora = new Date();
+    const usuarioOperador = req.usuario?.sub || "sistema";
+
+    // Buscar por _id o por codigo_rastreo
+    const encomienda = await db.collection("encomiendas").findOne({
+      $or: [{ _id: id }, { codigo_rastreo: String(id).trim().toUpperCase() }],
+    });
+
+    if (!encomienda) {
+      return res.status(404).json({
+        error: "Encomienda no encontrada",
+        mensaje: `No se encontró la encomienda con identificador '${id}'`,
+      });
+    }
+
+    const estadoAnterior = encomienda.estado;
+
+    // 1. Actualizar el estado principal de la encomienda en MongoDB Atlas
+    await db.collection("encomiendas").updateOne(
+      { _id: encomienda._id },
+      {
+        $set: {
+          estado: nuevo_estado,
+          actualizada_en: ahora,
+          ...(nuevo_estado === "entregada" ? { entregada_en: ahora } : {}),
+        },
+      }
+    );
+
+    // 2. Registrar el nuevo hito en 'historial_encomienda'
+    const nuevoHito = {
+      _id: generarUUIDv7(),
+      encomienda_id: encomienda._id,
+      estado: nuevo_estado,
+      ubicacion: String(ubicacion).trim(),
+      observacion: observacion ? String(observacion).trim() : `Actualización a estado: ${nuevo_estado}`,
+      usuario_id: usuarioOperador,
+      fecha: ahora,
+    };
+    await db.collection("historial_encomienda").insertOne(nuevoHito);
+
+    // 3. Auditoría técnica (CARD-24)
+    try {
+      await db.collection("auditoria").insertOne({
+        _id: generarUUIDv7(),
+        usuario_id: usuarioOperador,
+        accion: "ACTUALIZAR_MOVIMIENTO_ENCOMIENDA",
+        entidad: "encomiendas",
+        entidad_id: encomienda._id,
+        fecha: ahora,
+        estado: "exitoso",
+      });
+    } catch (e) {
+      console.warn("Aviso auditoría movimiento encomienda:", e.message);
+    }
+
+    return res.status(201).json({
+      mensaje: `Movimiento registrado exitosamente. Encomienda ahora en estado '${nuevo_estado}'.`,
+      encomienda_id: encomienda._id,
+      codigo_rastreo: encomienda.codigo_rastreo,
+      estado_anterior: estadoAnterior,
+      nuevo_estado: nuevo_estado,
+      hito: nuevoHito,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   calcularTarifaEncomienda,
   generarCodigoRastreo,
@@ -417,4 +593,7 @@ module.exports = {
   registrarEncomienda,
   listarEncomiendas,
   obtenerEncomiendaPorId,
+  rastrearEncomiendaPublico,
+  registrarMovimientoEncomienda,
 };
+
