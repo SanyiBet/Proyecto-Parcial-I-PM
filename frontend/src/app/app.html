@@ -18,6 +18,29 @@
       </div>
     </div>
 
+    <!-- Menú de Navegación de Módulos (CARD-15 y CARD-19) -->
+    <nav class="hidden md:flex items-center space-x-1">
+      <button
+        type="button"
+        (click)="irAViajes()"
+        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all"
+        [ngClass]="moduloActivo() === 'viajes' ? 'bg-transorense-verde/10 text-transorense-verde dark:bg-emerald-950/40 dark:text-emerald-400 font-extrabold' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'"
+      >
+        🚌 Venta de Pasajes
+      </button>
+
+      <button
+        *ngIf="puedeAccederBoleteria()"
+        type="button"
+        (click)="irABoleteria()"
+        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+        [ngClass]="moduloActivo() === 'boleteria' ? 'bg-transorense-amarillo text-slate-900 shadow-xs font-extrabold' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'"
+      >
+        <span>🎫 Boletería</span>
+        <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-slate-900 text-white font-mono">Agente</span>
+      </button>
+    </nav>
+
     <!-- Acciones de Cabecera: Selector de Tema y Botón de Usuario -->
     <div class="flex items-center space-x-3 sm:space-x-4">
       <!-- Selector de Tema Claro/Oscuro -->
@@ -75,49 +98,55 @@
 
 <!-- Contenido Principal -->
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-  <!-- Banner Institucional (Visible en el buscador) -->
-  <section *ngIf="!viajeActivo()" class="bg-gradient-to-r from-transorense-verde to-emerald-800 dark:from-slate-800 dark:to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-xl mb-10 relative overflow-hidden">
-    <div class="relative z-10 max-w-3xl">
-      <div class="inline-flex items-center space-x-2 bg-transorense-amarillo/20 text-transorense-amarillo text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full mb-4 border border-transorense-amarillo/30">
-        <span>Cooperativa TransOrense</span>
-        <span>•</span>
-        <span>Pasajes & Encomiendas</span>
+  <!-- MÓDULO 1: VENTA DE PASAJES (Buscador, Mapa de Asientos y Pago) -->
+  <ng-container *ngIf="moduloActivo() === 'viajes'">
+    <!-- Banner Institucional (Visible en el buscador) -->
+    <section *ngIf="!viajeActivo()" class="bg-gradient-to-r from-transorense-verde to-emerald-800 dark:from-slate-800 dark:to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-xl mb-10 relative overflow-hidden">
+      <div class="relative z-10 max-w-3xl">
+        <div class="inline-flex items-center space-x-2 bg-transorense-amarillo/20 text-transorense-amarillo text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full mb-4 border border-transorense-amarillo/30">
+          <span>Cooperativa TransOrense</span>
+          <span>•</span>
+          <span>Pasajes & Encomiendas</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight font-montserrat mb-3">
+          Viaja Seguro por las Rutas del Ecuador
+        </h1>
+        <p class="text-emerald-100 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
+          Elige tu horario favorito y reserva tus asientos con bloqueo en tiempo real de 10 minutos. Conectamos Machala, Guayaquil, Cuenca, Loja y Quito con el mejor confort.
+        </p>
       </div>
-      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight font-montserrat mb-3">
-        Viaja Seguro por las Rutas del Ecuador
-      </h1>
-      <p class="text-emerald-100 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
-        Elige tu horario favorito y reserva tus asientos con bloqueo en tiempo real de 10 minutos. Conectamos Machala, Guayaquil, Cuenca, Loja y Quito con el mejor confort.
-      </p>
-    </div>
-    <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-transorense-amarillo/10 rounded-full blur-3xl pointer-events-none"></div>
-  </section>
+      <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-transorense-amarillo/10 rounded-full blur-3xl pointer-events-none"></div>
+    </section>
 
-  <!-- Vista 1: Buscador Público de Viajes y Horarios (CARD-15) -->
-  <app-buscador-viajes
-    *ngIf="!viajeActivo()"
-    (viajeSeleccionado)="onViajeSeleccionado($event)"
-  ></app-buscador-viajes>
+    <!-- Vista 1: Buscador Público de Viajes y Horarios (CARD-15) -->
+    <app-buscador-viajes
+      *ngIf="!viajeActivo()"
+      (viajeSeleccionado)="onViajeSeleccionado($event)"
+    ></app-buscador-viajes>
 
-  <!-- Vista 2: Mapa Interactivo de Asientos y Temporizador de 10 min (CARD-16) -->
-  <app-mapa-asientos
-    *ngIf="viajeActivo() && !reservaParaPago()"
-    [viaje]="viajeActivo()!"
-    (volver)="onVolverABuscador()"
-    (solicitarLogin)="abrirModalAuth()"
-    (reservaConfirmada)="onReservaConfirmada($event)"
-  ></app-mapa-asientos>
+    <!-- Vista 2: Mapa Interactivo de Asientos y Temporizador de 10 min (CARD-16) -->
+    <app-mapa-asientos
+      *ngIf="viajeActivo() && !reservaParaPago()"
+      [viaje]="viajeActivo()!"
+      (volver)="onVolverABuscador()"
+      (solicitarLogin)="abrirModalAuth()"
+      (reservaConfirmada)="onReservaConfirmada($event)"
+    ></app-mapa-asientos>
 
-  <!-- Vista 3: Formulario de Datos de Pasajeros y Carga de Comprobante (CARD-18) -->
-  <app-formulario-pago
-    *ngIf="reservaParaPago()"
-    [viaje]="reservaParaPago()!.viaje"
-    [asientos]="reservaParaPago()!.asientos"
-    [total]="reservaParaPago()!.total"
-    [reservasIds]="reservaParaPago()!.reservas_ids"
-    (volverAlMapa)="onVolverAlMapa()"
-    (pagoExitoso)="onPagoExitoso()"
-  ></app-formulario-pago>
+    <!-- Vista 3: Formulario de Datos de Pasajeros y Carga de Comprobante (CARD-18) -->
+    <app-formulario-pago
+      *ngIf="reservaParaPago()"
+      [viaje]="reservaParaPago()!.viaje"
+      [asientos]="reservaParaPago()!.asientos"
+      [total]="reservaParaPago()!.total"
+      [reservasIds]="reservaParaPago()!.reservas_ids"
+      (volverAlMapa)="onVolverAlMapa()"
+      (pagoExitoso)="onPagoExitoso()"
+    ></app-formulario-pago>
+  </ng-container>
+
+  <!-- MÓDULO 2: PANEL DE OPERACIONES DE BOLETERÍA (CARD-19) -->
+  <app-panel-boleteria *ngIf="moduloActivo() === 'boleteria'"></app-panel-boleteria>
 
   <router-outlet></router-outlet>
 </main>

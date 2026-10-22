@@ -8,6 +8,8 @@ const {
   registrarPago,
   obtenerPagoPorReserva,
   listarPagosPendientes,
+  aprobarPago,
+  rechazarPago,
 } = require("../controllers/pagos.controller");
 const { authMiddleware, roleMiddleware } = require("../middleware/auth.middleware");
 
@@ -20,7 +22,9 @@ router.use(authMiddleware);
 router.post("/", registrarPago);
 router.get("/reserva/:reserva_id", obtenerPagoPorReserva);
 
-// Bandeja de verificación para Agente de Boletería y Administrador (CARD-19)
+// Bandeja y acciones para Agente de Boletería y Administrador (CARD-19)
 router.get("/pendientes", roleMiddleware(["administrador", "agente_boleteria"]), listarPagosPendientes);
+router.post("/:id/aprobar", roleMiddleware(["administrador", "agente_boleteria"]), aprobarPago);
+router.post("/:id/rechazar", roleMiddleware(["administrador", "agente_boleteria"]), rechazarPago);
 
 module.exports = router;

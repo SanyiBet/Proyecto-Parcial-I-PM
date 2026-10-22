@@ -1,0 +1,307 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 animate-fade-in space-y-8">
+  <!-- Encabezado del Panel -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+    <div>
+      <div class="flex items-center space-x-2 text-xs font-bold text-transorense-verde uppercase tracking-wider mb-1">
+        <span>🎫 Panel Operativo</span>
+        <span>•</span>
+        <span>Boletería TransOrense</span>
+      </div>
+      <h2 class="font-montserrat font-black text-2xl sm:text-3xl text-slate-900 dark:text-white tracking-tight">
+        Verificación de Comprobantes Bancarios
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+        Revisa, valida transferencias y aprueba la emisión definitiva de boletos interprovinciales.
+      </p>
+    </div>
+
+    <!-- Botón Refrescar -->
+    <div class="flex items-center gap-3">
+      <button
+        type="button"
+        (click)="cargarPagos()"
+        [disabled]="cargando()"
+        class="inline-flex items-center px-4 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors disabled:opacity-50"
+      >
+        <span class="mr-1.5" [ngClass]="{ 'animate-spin': cargando() }">🔄</span>
+        Refrescar Bandeja
+      </button>
+    </div>
+  </div>
+
+  <!-- Tarjetas de Estadísticas Rápidas -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <!-- Pendientes -->
+    <div class="p-5 rounded-2xl bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-900/50 shadow-xs flex items-center justify-between">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 block mb-1">
+          En Revisión / Pendientes
+        </span>
+        <span class="font-montserrat font-black text-3xl text-slate-900 dark:text-white">
+          {{ totalPendientes() }}
+        </span>
+      </div>
+      <div class="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl shadow-xs">
+        ⏳
+      </div>
+    </div>
+
+    <!-- Total en Bandeja -->
+    <div class="p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
+          Total de Solicitudes
+        </span>
+        <span class="font-montserrat font-black text-3xl text-slate-900 dark:text-white">
+          {{ pagos().length }}
+        </span>
+      </div>
+      <div class="w-12 h-12 rounded-2xl bg-transorense-verde/10 text-transorense-verde flex items-center justify-center text-xl shadow-xs">
+        📋
+      </div>
+    </div>
+
+    <!-- Rol Activo -->
+    <div class="p-5 rounded-2xl bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-900/50 shadow-xs flex items-center justify-between">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 block mb-1">
+          Agente en Sesión
+        </span>
+        <span class="font-montserrat font-black text-sm text-slate-900 dark:text-white truncate block max-w-[180px]">
+          {{ authService.usuarioActual()?.nombre || 'Agente de Boletería' }}
+        </span>
+        <span class="text-[10px] text-slate-400 font-mono">
+          Rol: {{ authService.usuarioActual()?.roles?.join(', ') }}
+        </span>
+      </div>
+      <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl shadow-xs">
+        🛡️
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de Filtros y Búsqueda -->
+  <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs flex flex-col sm:flex-row gap-3 items-center justify-between">
+    <!-- Buscador -->
+    <div class="relative w-full sm:w-80">
+      <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs">
+        🔍
+      </span>
+      <input
+        type="text"
+        [(ngModel)]="busqueda"
+        placeholder="Buscar por referencia o cédula..."
+        class="w-full pl-9 pr-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-transorense-verde/30 font-medium"
+      />
+    </div>
+
+    <!-- Indicador de total filtrado -->
+    <div class="text-xs text-slate-500 dark:text-slate-400">
+      Mostrando <strong class="text-slate-800 dark:text-slate-200">{{ pagosFiltrados().length }}</strong> registros
+    </div>
+  </div>
+
+  <!-- Tabla / Bandeja de Pagos -->
+  <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+    <!-- Spinner Cargando -->
+    <div *ngIf="cargando()" class="py-16 text-center space-y-3">
+      <div class="w-10 h-10 border-4 border-transorense-verde border-t-transparent rounded-full animate-spin mx-auto"></div>
+      <p class="text-xs text-slate-500 font-medium">Cargando comprobantes pendientes...</p>
+    </div>
+
+    <!-- Bandeja Vacía -->
+    <div *ngIf="!cargando() && pagosFiltrados().length === 0" class="py-16 text-center space-y-3">
+      <span class="text-4xl block">🎉</span>
+      <h3 class="font-montserrat font-bold text-base text-slate-800 dark:text-slate-200">
+        ¡Bandeja al día!
+      </h3>
+      <p class="text-xs text-slate-400 max-w-sm mx-auto">
+        No hay comprobantes pendientes de verificación en este momento. Las nuevas compras aparecerán aquí en tiempo real.
+      </p>
+    </div>
+
+    <!-- Tabla de Registros -->
+    <div *ngIf="!cargando() && pagosFiltrados().length > 0" class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead>
+          <tr class="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+            <th class="py-3.5 px-4">Comprobante</th>
+            <th class="py-3.5 px-4">Referencia</th>
+            <th class="py-3.5 px-4">Importe</th>
+            <th class="py-3.5 px-4">Pasajero / Cédula</th>
+            <th class="py-3.5 px-4">Asientos</th>
+            <th class="py-3.5 px-4">Fecha Solicitud</th>
+            <th class="py-3.5 px-4 text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-700/60 font-medium">
+          <tr
+            *ngFor="let p of pagosFiltrados()"
+            class="hover:bg-slate-50/70 dark:hover:bg-slate-700/30 transition-colors"
+          >
+            <!-- Comprobante / Miniatura -->
+            <td class="py-3.5 px-4">
+              <div
+                *ngIf="p.comprobante_url"
+                (click)="abrirVisor(p)"
+                class="w-12 h-12 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 cursor-pointer hover:scale-105 transition-transform flex items-center justify-center relative group shadow-xs"
+                title="Clic para inspeccionar comprobante"
+              >
+                <img
+                  *ngIf="!p.comprobante_url.endsWith('.pdf')"
+                  [src]="baseUrl + p.comprobante_url"
+                  alt="Comprobante"
+                  class="w-full h-full object-cover"
+                />
+                <span *ngIf="p.comprobante_url.endsWith('.pdf')" class="text-xl">📄</span>
+                <span class="absolute inset-0 bg-black/40 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 font-bold">
+                  Ver
+                </span>
+              </div>
+              <span *ngIf="!p.comprobante_url" class="text-slate-400 italic text-[11px]">Sin archivo</span>
+            </td>
+
+            <!-- Referencia Bancaria -->
+            <td class="py-3.5 px-4">
+              <span class="font-mono font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-700/60 px-2.5 py-1 rounded-lg">
+                #{{ p.referencia }}
+              </span>
+              <span class="block text-[10px] text-slate-400 mt-1 uppercase">
+                {{ p.metodo || 'transferencia' }}
+              </span>
+            </td>
+
+            <!-- Importe Total -->
+            <td class="py-3.5 px-4">
+              <span class="font-montserrat font-black text-sm text-transorense-verde">
+                ${{ p.importe | number: '1.2-2' }}
+              </span>
+            </td>
+
+            <!-- Pasajero -->
+            <td class="py-3.5 px-4">
+              <strong class="text-slate-800 dark:text-slate-200 block text-xs">
+                {{ p.pasajero_detalle?.nombre || 'Pasajero no asignado' }}
+              </strong>
+              <span class="text-[11px] text-slate-400 font-mono">
+                CI: {{ p.pasajero_detalle?.identificacion || 'N/A' }}
+              </span>
+            </td>
+
+            <!-- Asientos -->
+            <td class="py-3.5 px-4">
+              <span class="px-2 py-0.5 rounded-md bg-transorense-amarillo text-slate-900 font-mono font-black text-xs shadow-xs">
+                #{{ p.reserva_detalle?.asiento_numero || 'N/A' }}
+              </span>
+            </td>
+
+            <!-- Fecha -->
+            <td class="py-3.5 px-4 text-slate-500 dark:text-slate-400 text-[11px]">
+              {{ p.creado_en | date: 'dd/MM/yyyy HH:mm' }}
+            </td>
+
+            <!-- Acciones de Verificación -->
+            <td class="py-3.5 px-4 text-center">
+              <div class="inline-flex items-center gap-2">
+                <!-- Botón Aprobar -->
+                <button
+                  type="button"
+                  (click)="confirmarAprobacion(p)"
+                  [disabled]="procesandoAccion()"
+                  class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs flex items-center gap-1 transition-all active:scale-95 disabled:opacity-50"
+                  title="Aprobar pago y emitir boletos"
+                >
+                  <span>✓</span> Aprobar
+                </button>
+
+                <!-- Botón Rechazar -->
+                <button
+                  type="button"
+                  (click)="confirmarRechazo(p)"
+                  [disabled]="procesandoAccion()"
+                  class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 font-bold text-xs shadow-xs transition-all active:scale-95 disabled:opacity-50"
+                  title="Rechazar pago y liberar asientos"
+                >
+                  <span>✕</span> Rechazar
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal / Lightbox Visor de Comprobante -->
+<div
+  *ngIf="comprobanteModal()"
+  class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+  (click)="cerrarVisor()"
+>
+  <div
+    class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] flex flex-col"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Cabecera del Visor -->
+    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+      <div>
+        <h4 class="font-montserrat font-bold text-base text-slate-900 dark:text-white">
+          Inspección de Comprobante Bancario
+        </h4>
+        <span class="text-xs text-slate-400 font-mono">
+          Referencia: #{{ comprobanteModal()!.referencia }} | Total: ${{ comprobanteModal()!.importe | number: '1.2-2' }}
+        </span>
+      </div>
+      <button
+        type="button"
+        (click)="cerrarVisor()"
+        class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-lg font-bold w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+      >
+        ✕
+      </button>
+    </div>
+
+    <!-- Cuerpo con la Imagen o enlace a PDF -->
+    <div class="flex-1 overflow-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-2 flex items-center justify-center min-h-[300px]">
+      <img
+        *ngIf="!comprobanteModal()!.url.endsWith('.pdf')"
+        [src]="comprobanteModal()!.url"
+        alt="Comprobante Completo"
+        class="max-w-full max-h-[60vh] object-contain rounded-xl shadow-xs"
+      />
+      <div *ngIf="comprobanteModal()!.url.endsWith('.pdf')" class="text-center space-y-3 py-8">
+        <span class="text-5xl block">📑</span>
+        <p class="text-xs text-slate-600 dark:text-slate-300 font-semibold">
+          Este comprobante es un documento PDF.
+        </p>
+        <a
+          [href]="comprobanteModal()!.url"
+          target="_blank"
+          class="btn-transorense-primary inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold shadow-md"
+        >
+          <span>↗</span> Abrir PDF en pestaña nueva
+        </a>
+      </div>
+    </div>
+
+    <!-- Pie del Modal -->
+    <div class="flex justify-between items-center pt-2 text-xs">
+      <a
+        [href]="comprobanteModal()!.url"
+        target="_blank"
+        download
+        class="text-transorense-verde font-bold hover:underline inline-flex items-center gap-1"
+      >
+        <span>📥</span> Descargar archivo original
+      </a>
+      <button
+        type="button"
+        (click)="cerrarVisor()"
+        class="px-5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-slate-700 dark:text-slate-200 transition-colors"
+      >
+        Cerrar Visor
+      </button>
+    </div>
+  </div>
+</div>

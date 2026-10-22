@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -9,6 +9,7 @@ import { AuthModalComponent } from './features/auth/auth-modal.component';
 import { BuscadorViajesComponent } from './features/viajes/buscador-viajes/buscador-viajes.component';
 import { MapaAsientosComponent } from './features/viajes/mapa-asientos/mapa-asientos.component';
 import { FormularioPagoComponent } from './features/viajes/formulario-pago/formulario-pago.component';
+import { PanelBoleteriaComponent } from './features/boleteria/panel-boleteria/panel-boleteria.component';
 import { Viaje } from './core/models/viajes.models';
 
 @Component({
@@ -22,6 +23,7 @@ import { Viaje } from './core/models/viajes.models';
     BuscadorViajesComponent,
     MapaAsientosComponent,
     FormularioPagoComponent,
+    PanelBoleteriaComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -30,6 +32,15 @@ export class App {
   public themeService = inject(ThemeService);
   public sweetAlert = inject(SweetAlertService);
   public authService = inject(AuthService);
+
+  // Módulo activo en la aplicación ('viajes' | 'boleteria')
+  public moduloActivo = signal<'viajes' | 'boleteria'>('viajes');
+
+  // Control de permisos para Agente de Boletería y Administrador (CARD-19)
+  public puedeAccederBoleteria = computed(() => {
+    const roles = this.authService.usuarioActual()?.roles || [];
+    return roles.includes('administrador') || roles.includes('agente_boleteria');
+  });
 
   // Control de modal de autenticación (CARD-12)
   public mostrarModalAuth = signal<boolean>(false);
@@ -70,8 +81,17 @@ export class App {
   }
 
   public onVolverABuscador(): void {
+    this.moduloActivo.set('viajes');
     this.viajeActivo.set(null);
     this.reservaParaPago.set(null);
+  }
+
+  public irAViajes(): void {
+    this.moduloActivo.set('viajes');
+  }
+
+  public irABoleteria(): void {
+    this.moduloActivo.set('boleteria');
   }
 
   public onReservaConfirmada(evento: {
