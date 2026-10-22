@@ -29,6 +29,16 @@
         🚌 Venta de Pasajes
       </button>
 
+      <!-- Botón Público de Encomiendas (CARD-22) -->
+      <button
+        type="button"
+        (click)="irAEncomiendas()"
+        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+        [ngClass]="moduloActivo() === 'encomiendas' ? 'bg-transorense-verde text-white shadow-xs font-extrabold' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'"
+      >
+        <span>📦 Encomiendas</span>
+      </button>
+
       <button
         *ngIf="puedeAccederBoleteria()"
         type="button"
@@ -147,6 +157,9 @@
 
   <!-- MÓDULO 2: PANEL DE OPERACIONES DE BOLETERÍA (CARD-19) -->
   <app-panel-boleteria *ngIf="moduloActivo() === 'boleteria'"></app-panel-boleteria>
+
+  <!-- MÓDULO 3: ENCOMIENDAS PÚBLICAS (CALCULADORA & RASTREO) (CARD-22) -->
+  <app-encomiendas-publico *ngIf="moduloActivo() === 'encomiendas'"></app-encomiendas-publico>
 
   <router-outlet></router-outlet>
 </main>

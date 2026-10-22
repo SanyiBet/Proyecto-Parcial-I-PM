@@ -10,6 +10,7 @@ import { BuscadorViajesComponent } from './features/viajes/buscador-viajes/busca
 import { MapaAsientosComponent } from './features/viajes/mapa-asientos/mapa-asientos.component';
 import { FormularioPagoComponent } from './features/viajes/formulario-pago/formulario-pago.component';
 import { PanelBoleteriaComponent } from './features/boleteria/panel-boleteria/panel-boleteria.component';
+import { EncomiendasPublicoComponent } from './features/encomiendas/encomiendas-publico/encomiendas-publico.component';
 import { Viaje } from './core/models/viajes.models';
 
 @Component({
@@ -24,6 +25,7 @@ import { Viaje } from './core/models/viajes.models';
     MapaAsientosComponent,
     FormularioPagoComponent,
     PanelBoleteriaComponent,
+    EncomiendasPublicoComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -33,8 +35,8 @@ export class App {
   public sweetAlert = inject(SweetAlertService);
   public authService = inject(AuthService);
 
-  // Módulo activo en la aplicación ('viajes' | 'boleteria')
-  public moduloActivo = signal<'viajes' | 'boleteria'>('viajes');
+  // Módulo activo en la aplicación ('viajes' | 'boleteria' | 'encomiendas')
+  public moduloActivo = signal<'viajes' | 'boleteria' | 'encomiendas'>('viajes');
 
   // Control de permisos para Agente de Boletería y Administrador (CARD-19)
   public puedeAccederBoleteria = computed(() => {
@@ -88,6 +90,10 @@ export class App {
 
   public irAViajes(): void {
     this.moduloActivo.set('viajes');
+  }
+
+  public irAEncomiendas(): void {
+    this.moduloActivo.set('encomiendas');
   }
 
   public irABoleteria(): void {
