@@ -18,7 +18,7 @@
       </div>
     </div>
 
-    <!-- Menú de Navegación de Módulos (CARD-15 y CARD-19) -->
+    <!-- Menú de Navegación de Módulos (CARD-15, CARD-19, CARD-22 y CARD-23) -->
     <nav class="hidden md:flex items-center space-x-1">
       <button
         type="button"
@@ -29,6 +29,17 @@
         🚌 Venta de Pasajes
       </button>
 
+      <!-- Botón Público de Encomiendas (CARD-22) -->
+      <button
+        type="button"
+        (click)="irAEncomiendas()"
+        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+        [ngClass]="moduloActivo() === 'encomiendas' ? 'bg-transorense-verde text-white shadow-xs font-extrabold' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'"
+      >
+        <span>📦 Encomiendas</span>
+      </button>
+
+      <!-- Botón Boletería para Agente/Admin (CARD-19) -->
       <button
         *ngIf="puedeAccederBoleteria()"
         type="button"
@@ -38,6 +49,18 @@
       >
         <span>🎫 Boletería</span>
         <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-slate-900 text-white font-mono">Agente</span>
+      </button>
+
+      <!-- Botón Operador Encomiendas para Operador/Admin (CARD-23) -->
+      <button
+        *ngIf="puedeAccederOperadorEncomiendas()"
+        type="button"
+        (click)="irAOperadorEncomiendas()"
+        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+        [ngClass]="moduloActivo() === 'operador_encomiendas' ? 'bg-emerald-700 text-white shadow-xs font-extrabold' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'"
+      >
+        <span>🚛 Operador Carga</span>
+        <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-950 text-emerald-200 font-mono">Operador</span>
       </button>
     </nav>
 
@@ -147,6 +170,12 @@
 
   <!-- MÓDULO 2: PANEL DE OPERACIONES DE BOLETERÍA (CARD-19) -->
   <app-panel-boleteria *ngIf="moduloActivo() === 'boleteria'"></app-panel-boleteria>
+
+  <!-- MÓDULO 3: ENCOMIENDAS PÚBLICAS (CALCULADORA & RASTREO) (CARD-22) -->
+  <app-encomiendas-publico *ngIf="moduloActivo() === 'encomiendas'"></app-encomiendas-publico>
+
+  <!-- MÓDULO 4: PANEL DE OPERADOR DE ENCOMIENDAS (CARD-23) -->
+  <app-panel-operador-encomiendas *ngIf="moduloActivo() === 'operador_encomiendas'"></app-panel-operador-encomiendas>
 
   <router-outlet></router-outlet>
 </main>

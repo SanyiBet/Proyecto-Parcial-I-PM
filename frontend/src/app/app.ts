@@ -10,6 +10,8 @@ import { BuscadorViajesComponent } from './features/viajes/buscador-viajes/busca
 import { MapaAsientosComponent } from './features/viajes/mapa-asientos/mapa-asientos.component';
 import { FormularioPagoComponent } from './features/viajes/formulario-pago/formulario-pago.component';
 import { PanelBoleteriaComponent } from './features/boleteria/panel-boleteria/panel-boleteria.component';
+import { EncomiendasPublicoComponent } from './features/encomiendas/encomiendas-publico/encomiendas-publico.component';
+import { PanelOperadorEncomiendasComponent } from './features/encomiendas/panel-operador-encomiendas/panel-operador-encomiendas.component';
 import { Viaje } from './core/models/viajes.models';
 
 @Component({
@@ -24,6 +26,8 @@ import { Viaje } from './core/models/viajes.models';
     MapaAsientosComponent,
     FormularioPagoComponent,
     PanelBoleteriaComponent,
+    EncomiendasPublicoComponent,
+    PanelOperadorEncomiendasComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -33,13 +37,19 @@ export class App {
   public sweetAlert = inject(SweetAlertService);
   public authService = inject(AuthService);
 
-  // Módulo activo en la aplicación ('viajes' | 'boleteria')
-  public moduloActivo = signal<'viajes' | 'boleteria'>('viajes');
+  // Módulo activo en la aplicación ('viajes' | 'boleteria' | 'encomiendas' | 'operador_encomiendas')
+  public moduloActivo = signal<'viajes' | 'boleteria' | 'encomiendas' | 'operador_encomiendas'>('viajes');
 
   // Control de permisos para Agente de Boletería y Administrador (CARD-19)
   public puedeAccederBoleteria = computed(() => {
     const roles = this.authService.usuarioActual()?.roles || [];
     return roles.includes('administrador') || roles.includes('agente_boleteria');
+  });
+
+  // Control de permisos para Operador de Encomiendas y Administrador (CARD-23)
+  public puedeAccederOperadorEncomiendas = computed(() => {
+    const roles = this.authService.usuarioActual()?.roles || [];
+    return roles.includes('administrador') || roles.includes('operador_encomiendas');
   });
 
   // Control de modal de autenticación (CARD-12)
@@ -90,8 +100,16 @@ export class App {
     this.moduloActivo.set('viajes');
   }
 
+  public irAEncomiendas(): void {
+    this.moduloActivo.set('encomiendas');
+  }
+
   public irABoleteria(): void {
     this.moduloActivo.set('boleteria');
+  }
+
+  public irAOperadorEncomiendas(): void {
+    this.moduloActivo.set('operador_encomiendas');
   }
 
   public onReservaConfirmada(evento: {

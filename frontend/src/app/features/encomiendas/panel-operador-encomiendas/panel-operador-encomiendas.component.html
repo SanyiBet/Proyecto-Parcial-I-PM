@@ -1,0 +1,757 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+  <!-- Cabecera del Panel Operativo -->
+  <div class="bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl mb-8 relative overflow-hidden">
+    <div class="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
+      <svg class="w-80 h-80" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+      </svg>
+    </div>
+
+    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-600/50 backdrop-blur-sm border border-emerald-400/30 text-xs font-semibold uppercase tracking-wider text-emerald-200 mb-3">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          Terminal Terrestre Machala • Ventanilla de Carga
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight font-heading">
+          Panel de Control de Encomiendas
+        </h1>
+        <p class="text-emerald-100 text-sm sm:text-base mt-1 max-w-2xl font-sans">
+          Recepción, pesaje báscula/volumétrico, cobro en taquilla y emisión inmediata de guías con código criptográfico seguro.
+        </p>
+      </div>
+
+      <!-- Pestañas de Navegación -->
+      <div class="inline-flex bg-emerald-950/60 p-1.5 rounded-2xl border border-emerald-600/40 backdrop-blur-md self-start md:self-auto">
+        <button
+          type="button"
+          (click)="pestanaActiva.set('registro')"
+          [class.bg-amber-400]="pestanaActiva() === 'registro'"
+          [class.text-slate-900]="pestanaActiva() === 'registro'"
+          [class.font-bold]="pestanaActiva() === 'registro'"
+          [class.text-white]="pestanaActiva() !== 'registro'"
+          class="px-4 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Nueva Encomienda
+        </button>
+        <button
+          type="button"
+          (click)="pestanaActiva.set('bandeja'); cargarEncomiendas()"
+          [class.bg-amber-400]="pestanaActiva() === 'bandeja'"
+          [class.text-slate-900]="pestanaActiva() === 'bandeja'"
+          [class.font-bold]="pestanaActiva() === 'bandeja'"
+          [class.text-white]="pestanaActiva() !== 'bandeja'"
+          class="px-4 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+          </svg>
+          Bandeja de Paquetes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- VISTA 1: REGISTRO DE NUEVA ENCOMIENDA                    -->
+  <!-- ======================================================== -->
+  @if (pestanaActiva() === 'registro') {
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Columna 1 y 2: Formulario de Emisión -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Bloque Remitente y Destinatario -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Card Remitente -->
+          <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-700/80">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold">
+                1
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base">Datos del Remitente</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Persona que entrega el paquete</p>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Cédula Ecuatoriana (10 dígitos)*</label>
+                <div class="relative">
+                  <input
+                    type="text"
+                    maxlength="10"
+                    [(ngModel)]="nuevoRegistro.remitente.cedula"
+                    (input)="validarCedulaRem()"
+                    placeholder="Ej. 0705234567"
+                    class="w-full px-3.5 py-2.5 rounded-xl border bg-slate-50 dark:bg-slate-900/50 text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-emerald-500 transition-colors"
+                    [class.border-emerald-500]="cedulaRemitenteValida() && cedulaRemitenteTocada()"
+                    [class.border-red-400]="!cedulaRemitenteValida() && cedulaRemitenteTocada()"
+                    [class.border-slate-300]="!cedulaRemitenteTocada()"
+                    [class.dark:border-slate-600]="!cedulaRemitenteTocada()"
+                  />
+                  @if (cedulaRemitenteTocada()) {
+                    <span class="absolute right-3 top-2.5 text-xs font-bold" [class.text-emerald-600]="cedulaRemitenteValida()" [class.text-red-500]="!cedulaRemitenteValida()">
+                      {{ cedulaRemitenteValida() ? '✓ Válida' : '✗ Inválida' }}
+                    </span>
+                  }
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Nombres y Apellidos*</label>
+                <input
+                  type="text"
+                  [(ngModel)]="nuevoRegistro.remitente.nombre"
+                  placeholder="Ej. Carlos Alberto Mendoza"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-emerald-500 transition-colors"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Teléfono Móvil*</label>
+                <input
+                  type="text"
+                  maxlength="10"
+                  [(ngModel)]="nuevoRegistro.remitente.telefono"
+                  placeholder="Ej. 0991234567"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-emerald-500 transition-colors"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Card Destinatario -->
+          <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-700/80">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 flex items-center justify-center font-bold">
+                2
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base">Datos del Destinatario</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Persona que retirará en ventanilla</p>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Cédula Ecuatoriana (10 dígitos)*</label>
+                <div class="relative">
+                  <input
+                    type="text"
+                    maxlength="10"
+                    [(ngModel)]="nuevoRegistro.destinatario.cedula"
+                    (input)="validarCedulaDest()"
+                    placeholder="Ej. 0914876543"
+                    class="w-full px-3.5 py-2.5 rounded-xl border bg-slate-50 dark:bg-slate-900/50 text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 transition-colors"
+                    [class.border-emerald-500]="cedulaDestinatarioValida() && cedulaDestinatarioTocada()"
+                    [class.border-red-400]="!cedulaDestinatarioValida() && cedulaDestinatarioTocada()"
+                    [class.border-slate-300]="!cedulaDestinatarioTocada()"
+                    [class.dark:border-slate-600]="!cedulaDestinatarioTocada()"
+                  />
+                  @if (cedulaDestinatarioTocada()) {
+                    <span class="absolute right-3 top-2.5 text-xs font-bold" [class.text-emerald-600]="cedulaDestinatarioValida()" [class.text-red-500]="!cedulaDestinatarioValida()">
+                      {{ cedulaDestinatarioValida() ? '✓ Válida' : '✗ Inválida' }}
+                    </span>
+                  }
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Nombres y Apellidos*</label>
+                <input
+                  type="text"
+                  [(ngModel)]="nuevoRegistro.destinatario.nombre"
+                  placeholder="Ej. María Elena Suárez"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 transition-colors"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Teléfono Móvil*</label>
+                <input
+                  type="text"
+                  maxlength="10"
+                  [(ngModel)]="nuevoRegistro.destinatario.telefono"
+                  placeholder="Ej. 0987654321"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 transition-colors"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloque Ruta y Paquete -->
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-700/80">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold">
+              3
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base">Ruta y Características del Envío</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Origen, destino, peso en báscula y medidas</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Agencia Origen*</label>
+              <select
+                [(ngModel)]="nuevoRegistro.origen"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-emerald-500"
+              >
+                @for (c of ciudades; track c) {
+                  <option [value]="c">{{ c }}</option>
+                }
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Agencia Destino*</label>
+              <select
+                [(ngModel)]="nuevoRegistro.destino"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-emerald-500"
+              >
+                @for (c of ciudades; track c) {
+                  <option [value]="c">{{ c }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <!-- Dimensiones y Báscula -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/60 mb-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Peso Báscula (kg)</label>
+              <input
+                type="number"
+                min="0.1"
+                step="0.1"
+                [(ngModel)]="nuevoRegistro.peso_kg"
+                (input)="recalcularTarifaEnVivo()"
+                class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm font-semibold"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Largo (cm)</label>
+              <input
+                type="number"
+                min="1"
+                [(ngModel)]="nuevoRegistro.dimensiones.largo_cm"
+                (input)="recalcularTarifaEnVivo()"
+                class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm font-semibold"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Ancho (cm)</label>
+              <input
+                type="number"
+                min="1"
+                [(ngModel)]="nuevoRegistro.dimensiones.ancho_cm"
+                (input)="recalcularTarifaEnVivo()"
+                class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm font-semibold"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Alto (cm)</label>
+              <input
+                type="number"
+                min="1"
+                [(ngModel)]="nuevoRegistro.dimensiones.alto_cm"
+                (input)="recalcularTarifaEnVivo()"
+                class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm font-semibold"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Descripción del Contenido / Observaciones de Embalaje</label>
+            <input
+              type="text"
+              [(ngModel)]="nuevoRegistro.descripcion_paquete"
+              placeholder="Ej. Caja sellada con repuestos de motor y manuales"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna 3: Desglose Tarifario y Botón de Cobro -->
+      <div class="space-y-6">
+        <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 text-white rounded-3xl p-6 shadow-xl border border-emerald-500/30 sticky top-6">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-700">
+            <div>
+              <span class="text-xs uppercase tracking-wider text-emerald-400 font-bold">Cobro en Taquilla</span>
+              <h4 class="text-lg font-bold">Liquidación de Guía</h4>
+            </div>
+            <div class="w-10 h-10 rounded-2xl bg-amber-400/20 text-amber-300 flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="py-4 space-y-3 text-sm">
+            <div class="flex justify-between text-slate-300">
+              <span>Peso Báscula:</span>
+              <span class="font-semibold text-white">{{ nuevoRegistro.peso_kg }} kg</span>
+            </div>
+            <div class="flex justify-between text-slate-300">
+              <span>Peso Volumétrico (IATA /5000):</span>
+              <span class="font-semibold text-white">{{ calculoTarifa().pesoVolumetrico }} kg</span>
+            </div>
+            <div class="flex justify-between text-slate-300">
+              <span>Peso Facturable:</span>
+              <span class="font-semibold text-amber-300">{{ calculoTarifa().pesoFacturable }} kg</span>
+            </div>
+            <div class="flex justify-between text-slate-300">
+              <span>Tarifa Base (hasta 2 kg):</span>
+              <span class="text-slate-300">$3.50</span>
+            </div>
+            @if (calculoTarifa().pesoFacturable > 2) {
+              <div class="flex justify-between text-slate-300 text-xs">
+                <span>Adicional ({{ (calculoTarifa().pesoFacturable - 2).toFixed(2) }} kg × $0.80):</span>
+                <span class="text-amber-300">+${{ ((calculoTarifa().pesoFacturable - 2) * 0.8).toFixed(2) }}</span>
+              </div>
+            }
+
+            <div class="pt-4 border-t border-slate-700/80 flex items-baseline justify-between">
+              <span class="text-base font-bold text-emerald-300">Total a Cobrar:</span>
+              <span class="text-3xl font-extrabold text-amber-400 font-mono">
+                ${{ calculoTarifa().precioFinal.toFixed(2) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="mt-6">
+            <button
+              type="button"
+              (click)="registrarEncomienda()"
+              [disabled]="cargando()"
+              class="w-full py-4 px-6 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-base shadow-lg shadow-amber-400/20 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+            >
+              @if (cargando()) {
+                <span class="animate-spin w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full"></span>
+                <span>Generando Guía...</span>
+              } @else {
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                </svg>
+                <span>Emitir Guía y Cobrar</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ======================================================== -->
+  <!-- VISTA 2: BANDEJA DE ENCOMIENDAS (OPERADOR)               -->
+  <!-- ======================================================== -->
+  @if (pestanaActiva() === 'bandeja') {
+    <div class="space-y-6">
+      <!-- Filtros y Búsqueda -->
+      <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-4">
+        <!-- Buscador -->
+        <div class="relative w-full md:w-96">
+          <input
+            type="text"
+            [(ngModel)]="busquedaTexto"
+            (keyup.enter)="aplicarFiltros()"
+            placeholder="Buscar por guía (TRO-...), cédula o nombre..."
+            class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-emerald-500"
+          />
+          <svg class="w-5 h-5 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </div>
+
+        <!-- Filtros por Estado -->
+        <div class="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
+          <button
+            type="button"
+            (click)="filtroEstado.set('todos'); aplicarFiltros()"
+            [class.bg-emerald-600]="filtroEstado() === 'todos'"
+            [class.text-white]="filtroEstado() === 'todos'"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+          >
+            Todos
+          </button>
+          <button
+            type="button"
+            (click)="filtroEstado.set('recibida'); aplicarFiltros()"
+            [class.bg-amber-500]="filtroEstado() === 'recibida'"
+            [class.text-white]="filtroEstado() === 'recibida'"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+          >
+            Recibidas
+          </button>
+          <button
+            type="button"
+            (click)="filtroEstado.set('en_transito'); aplicarFiltros()"
+            [class.bg-blue-600]="filtroEstado() === 'en_transito'"
+            [class.text-white]="filtroEstado() === 'en_transito'"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+          >
+            En Tránsito
+          </button>
+          <button
+            type="button"
+            (click)="filtroEstado.set('en_destino'); aplicarFiltros()"
+            [class.bg-purple-600]="filtroEstado() === 'en_destino'"
+            [class.text-white]="filtroEstado() === 'en_destino'"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+          >
+            En Destino
+          </button>
+          <button
+            type="button"
+            (click)="filtroEstado.set('entregada'); aplicarFiltros()"
+            [class.bg-emerald-600]="filtroEstado() === 'entregada'"
+            [class.text-white]="filtroEstado() === 'entregada'"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+          >
+            Entregadas
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabla de Encomiendas -->
+      <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+            <thead class="bg-slate-50 dark:bg-slate-900/60 text-xs uppercase font-bold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+              <tr>
+                <th class="px-6 py-4">Código Guía</th>
+                <th class="px-6 py-4">Ruta</th>
+                <th class="px-6 py-4">Remitente / Destinatario</th>
+                <th class="px-6 py-4 text-center">Peso / Tarifa</th>
+                <th class="px-6 py-4 text-center">Estado</th>
+                <th class="px-6 py-4 text-right">Acciones Operativas</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-700/60">
+              @for (item of encomiendas(); track item._id) {
+                <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-700/40 transition-colors">
+                  <td class="px-6 py-4 font-mono font-bold text-slate-900 dark:text-white">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                      {{ item.codigo_rastreo }}
+                    </div>
+                    <span class="text-[11px] font-sans text-slate-400 font-normal">
+                      {{ item.creada_en | date:'short' }}
+                    </span>
+                  </td>
+
+                  <td class="px-6 py-4 font-medium">
+                    <div class="flex items-center gap-1.5 text-slate-900 dark:text-slate-100">
+                      <span>{{ item.origen }}</span>
+                      <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                      </svg>
+                      <span>{{ item.destino }}</span>
+                    </div>
+                  </td>
+
+                  <td class="px-6 py-4 text-xs">
+                    <div><strong class="text-slate-700 dark:text-slate-300">De:</strong> {{ item.remitente.nombre }} ({{ item.remitente.cedula }})</div>
+                    <div><strong class="text-slate-700 dark:text-slate-300">Para:</strong> {{ item.destinatario.nombre }} ({{ item.destinatario.cedula }})</div>
+                  </td>
+
+                  <td class="px-6 py-4 text-center">
+                    <div class="font-bold text-slate-900 dark:text-white">{{ item.peso_kg }} kg</div>
+                    <div class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 font-mono">${{ item.precio_final.toFixed(2) }}</div>
+                  </td>
+
+                  <td class="px-6 py-4 text-center">
+                    <span [class]="getBadgeClase(item.estado)" class="px-3 py-1 rounded-full text-xs font-semibold border inline-block">
+                      {{ getBadgeLabel(item.estado) }}
+                    </span>
+                  </td>
+
+                  <td class="px-6 py-4 text-right space-x-2">
+                    <!-- Botón Actualizar Estado -->
+                    <button
+                      type="button"
+                      (click)="abrirModalMovimiento(item)"
+                      title="Registrar nuevo movimiento físico"
+                      class="px-2.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-semibold hover:bg-blue-100 transition-colors inline-flex items-center gap-1"
+                    >
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                      </svg>
+                      Mover
+                    </button>
+
+                    <!-- Botón Ver Historial -->
+                    <button
+                      type="button"
+                      (click)="verHistorial(item)"
+                      title="Ver historial de trazabilidad"
+                      class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-200 transition-colors inline-flex items-center gap-1"
+                    >
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                      Historial
+                    </button>
+
+                    <!-- Botón Ver Guía / Imprimir -->
+                    <button
+                      type="button"
+                      (click)="verGuia(item)"
+                      title="Imprimir ticket o etiqueta"
+                      class="px-2.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-semibold hover:bg-emerald-100 transition-colors inline-flex items-center gap-1"
+                    >
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                      </svg>
+                      Etiqueta
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6" class="px-6 py-12 text-center text-slate-400">
+                    <p class="font-medium">No se encontraron encomiendas con los filtros seleccionados.</p>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ======================================================== -->
+  <!-- MODAL: ETIQUETA OFICIAL / GUÍA DE ENVÍO IMPRIMIBLE       -->
+  <!-- ======================================================== -->
+  @if (mostrarModalGuia() && encomiendaEmitida()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 relative">
+        <button
+          type="button"
+          (click)="cerrarModalGuia()"
+          class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+
+        <!-- Etiqueta con estilo ticket para impresión -->
+        <div id="etiqueta-imprimible" class="p-6 rounded-2xl border-2 border-dashed border-slate-400 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/80">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-300 dark:border-slate-700">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-black text-xl">
+                T
+              </div>
+              <div>
+                <h4 class="font-black text-slate-900 dark:text-white uppercase tracking-tight text-lg">TRANSORENSE C.A.</h4>
+                <p class="text-[11px] text-slate-500 font-semibold">GUÍA DE CARGA Y ENCOMIENDA OFICIAL</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-xs uppercase font-bold text-slate-400">Rastreo</span>
+              <p class="font-mono font-black text-lg text-emerald-600 dark:text-emerald-400">
+                {{ encomiendaEmitida()?.codigo_rastreo }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Código de barras simulado en CSS -->
+          <div class="py-3 text-center border-b border-slate-300 dark:border-slate-700 my-2">
+            <div class="inline-flex items-center justify-center h-12 w-64 bg-slate-900 dark:bg-slate-100 rounded px-3 py-1 space-x-1">
+              <span class="w-1 h-10 bg-white dark:bg-slate-900 inline-block"></span>
+              <span class="w-2 h-10 bg-white dark:bg-slate-900 inline-block"></span>
+              <span class="w-0.5 h-10 bg-white dark:bg-slate-900 inline-block"></span>
+              <span class="w-3 h-10 bg-white dark:bg-slate-900 inline-block"></span>
+              <span class="w-1.5 h-10 bg-white dark:bg-slate-900 inline-block"></span>
+              <span class="w-0.5 h-10 bg-white dark:bg-slate-900 inline-block"></span>
+              <span class="w-2 h-10 bg-white dark:bg-slate-900 inline-block"></span>
+              <span class="w-1 h-10 bg-white dark:bg-slate-900 inline-block"></span>
+              <span class="w-2.5 h-10 bg-white dark:bg-slate-900 inline-block"></span>
+              <span class="w-1 h-10 bg-white dark:bg-slate-900 inline-block"></span>
+              <span class="w-3 h-10 bg-white dark:bg-slate-900 inline-block"></span>
+              <span class="w-1.5 h-10 bg-white dark:bg-slate-900 inline-block"></span>
+            </div>
+            <p class="text-[10px] font-mono text-slate-500 mt-1">*{{ encomiendaEmitida()?.codigo_rastreo }}*</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 py-3 text-xs border-b border-slate-300 dark:border-slate-700">
+            <div>
+              <p class="font-bold text-slate-400 uppercase text-[10px]">ORIGEN</p>
+              <p class="font-bold text-slate-800 dark:text-slate-100 text-sm">{{ encomiendaEmitida()?.origen }}</p>
+              <p class="mt-1 font-semibold text-slate-700 dark:text-slate-300">{{ encomiendaEmitida()?.remitente?.nombre }}</p>
+              <p class="text-slate-500">CI: {{ encomiendaEmitida()?.remitente?.cedula }}</p>
+              <p class="text-slate-500">Telf: {{ encomiendaEmitida()?.remitente?.telefono }}</p>
+            </div>
+            <div>
+              <p class="font-bold text-slate-400 uppercase text-[10px]">DESTINO</p>
+              <p class="font-bold text-slate-800 dark:text-slate-100 text-sm">{{ encomiendaEmitida()?.destino }}</p>
+              <p class="mt-1 font-semibold text-slate-700 dark:text-slate-300">{{ encomiendaEmitida()?.destinatario?.nombre }}</p>
+              <p class="text-slate-500">CI: {{ encomiendaEmitida()?.destinatario?.cedula }}</p>
+              <p class="text-slate-500">Telf: {{ encomiendaEmitida()?.destinatario?.telefono }}</p>
+            </div>
+          </div>
+
+          <div class="pt-3 flex justify-between items-center text-xs">
+            <div>
+              <span class="text-slate-500">Peso: </span>
+              <strong class="text-slate-800 dark:text-white">{{ encomiendaEmitida()?.peso_kg }} kg</strong>
+            </div>
+            <div>
+              <span class="text-slate-500">Valor Pagado: </span>
+              <strong class="font-mono text-emerald-600 text-base">${{ encomiendaEmitida()?.precio_final?.toFixed ? encomiendaEmitida()?.precio_final?.toFixed(2) : encomiendaEmitida()?.precio_final }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 flex gap-3">
+          <button
+            type="button"
+            (click)="imprimirGuia()"
+            class="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow flex items-center justify-center gap-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+            </svg>
+            Imprimir Etiqueta
+          </button>
+          <button
+            type="button"
+            (click)="cerrarModalGuia()"
+            class="py-3 px-6 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-sm hover:bg-slate-300"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ======================================================== -->
+  <!-- MODAL: REGISTRAR MOVIMIENTO FÍSICO / CAMBIO DE ESTADO     -->
+  <!-- ======================================================== -->
+  @if (mostrarModalMovimiento() && encomiendaSeleccionada()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800">
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">
+          Actualizar Estado del Paquete
+        </h3>
+        <p class="text-xs text-slate-500 mb-4">
+          Guía: <strong class="font-mono text-emerald-600">{{ encomiendaSeleccionada()?.codigo_rastreo }}</strong>
+        </p>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Nuevo Estado*</label>
+            <select
+              [(ngModel)]="nuevoMovimiento.estado"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="recibida">Recibida en Agencia</option>
+              <option value="en_transito">En Tránsito (Cargado en Bus)</option>
+              <option value="en_destino">En Agencia de Destino</option>
+              <option value="entregada">Entregada a Destinatario</option>
+              <option value="devuelta">Devuelta a Origen</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Ubicación Física Actual*</label>
+            <input
+              type="text"
+              [(ngModel)]="nuevoMovimiento.ubicacion"
+              placeholder="Ej. Terminal Terrestre Guayaquil - Bodega B"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Observación Operativa</label>
+            <textarea
+              rows="3"
+              [(ngModel)]="nuevoMovimiento.observacion"
+              placeholder="Ej. Paquete despachado en unidad #24 disco Guayaquil. Sin novedades en precinto."
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm focus:ring-2 focus:ring-emerald-500"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="mt-6 flex gap-3">
+          <button
+            type="button"
+            (click)="guardarMovimiento()"
+            [disabled]="cargando()"
+            class="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow disabled:opacity-50"
+          >
+            {{ cargando() ? 'Guardando...' : 'Guardar Movimiento' }}
+          </button>
+          <button
+            type="button"
+            (click)="cerrarModalMovimiento()"
+            class="py-3 px-5 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-sm font-semibold"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ======================================================== -->
+  <!-- MODAL: HISTORIAL CRONOLÓGICO DE LA ENCOMIENDA            -->
+  <!-- ======================================================== -->
+  @if (mostrarModalHistorial() && encomiendaSeleccionada()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[85vh] flex flex-col">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Trazabilidad de Encomienda</h3>
+            <p class="text-xs text-slate-500 font-mono">Guía: {{ encomiendaSeleccionada()?.codigo_rastreo }}</p>
+          </div>
+          <button type="button" (click)="cerrarModalHistorial()" class="text-slate-400 hover:text-slate-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="overflow-y-auto py-4 space-y-4 flex-1">
+          @for (hito of historialModal(); track hito._id) {
+            <div class="flex items-start gap-3 relative">
+              <div class="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                ●
+              </div>
+              <div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-2xl border border-slate-200 dark:border-slate-700/60 w-full text-xs">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="font-bold text-slate-900 dark:text-white uppercase">{{ getBadgeLabel(hito.estado) }}</span>
+                  <span class="text-[10px] text-slate-400 font-mono">{{ hito.fecha | date:'short' }}</span>
+                </div>
+                <p class="text-slate-600 dark:text-slate-300 font-medium">📍 {{ hito.ubicacion }}</p>
+                <p class="text-slate-500 dark:text-slate-400 mt-1 italic">{{ hito.observacion }}</p>
+              </div>
+            </div>
+          } @empty {
+            <p class="text-center text-slate-400 text-xs py-4">No hay movimientos registrados.</p>
+          }
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 dark:border-slate-800 text-right">
+          <button
+            type="button"
+            (click)="cerrarModalHistorial()"
+            class="px-5 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold hover:bg-slate-300"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

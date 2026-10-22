@@ -13,7 +13,9 @@
     "test:card08-09": "node tests/test-card08-09.js",
     "test:card17": "node tests/test-card17.js",
     "test:card19": "node tests/test-card19.js",
-    "test": "node tests/test-card06.js && node tests/test-card07.js && node tests/test-card08-09.js && node tests/test-card17.js && node tests/test-card19.js"
+    "test:card20": "node tests/test-card20.js",
+    "test:card21": "node tests/test-card21.js",
+    "test": "node tests/test-card06.js && node tests/test-card07.js && node tests/test-card08-09.js && node tests/test-card17.js && node tests/test-card19.js && node tests/test-card20.js && node tests/test-card21.js"
   },
   "keywords": [],
   "author": "",
