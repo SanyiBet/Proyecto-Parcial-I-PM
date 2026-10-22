@@ -6,8 +6,9 @@ import { ThemeService } from './core/services/theme.service';
 import { SweetAlertService } from './core/services/sweet-alert.service';
 import { AuthService } from './core/services/auth.service';
 import { AuthModalComponent } from './features/auth/auth-modal.component';
-import { BuscadorViajesComponent } from './features/viajes/buscador-viajes.component';
-import { MapaAsientosComponent } from './features/viajes/mapa-asientos.component';
+import { BuscadorViajesComponent } from './features/viajes/buscador-viajes/buscador-viajes.component';
+import { MapaAsientosComponent } from './features/viajes/mapa-asientos/mapa-asientos.component';
+import { FormularioPagoComponent } from './features/viajes/formulario-pago/formulario-pago.component';
 import { Viaje } from './core/models/viajes.models';
 
 @Component({
@@ -20,6 +21,7 @@ import { Viaje } from './core/models/viajes.models';
     AuthModalComponent,
     BuscadorViajesComponent,
     MapaAsientosComponent,
+    FormularioPagoComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -32,8 +34,14 @@ export class App {
   // Control de modal de autenticación (CARD-12)
   public mostrarModalAuth = signal<boolean>(false);
 
-  // Flujo de compra y selección de asientos (CARD-15 y CARD-16)
+  // Flujo de compra, asientos y pagos (CARD-15, CARD-16 y CARD-18)
   public viajeActivo = signal<Viaje | null>(null);
+  public reservaParaPago = signal<{
+    viaje: Viaje;
+    asientos: string[];
+    total: number;
+    reservas_ids: string[];
+  } | null>(null);
 
   public alternarTema(): void {
     this.themeService.toggleTheme();
@@ -58,9 +66,36 @@ export class App {
 
   public onViajeSeleccionado(viaje: Viaje): void {
     this.viajeActivo.set(viaje);
+    this.reservaParaPago.set(null);
   }
 
   public onVolverABuscador(): void {
+    this.viajeActivo.set(null);
+    this.reservaParaPago.set(null);
+  }
+
+  public onReservaConfirmada(evento: {
+    viaje_id: string;
+    asientos: string[];
+    total: number;
+    reservas_ids: string[];
+  }): void {
+    if (this.viajeActivo()) {
+      this.reservaParaPago.set({
+        viaje: this.viajeActivo()!,
+        asientos: evento.asientos,
+        total: evento.total,
+        reservas_ids: evento.reservas_ids,
+      });
+    }
+  }
+
+  public onVolverAlMapa(): void {
+    this.reservaParaPago.set(null);
+  }
+
+  public onPagoExitoso(): void {
+    this.reservaParaPago.set(null);
     this.viajeActivo.set(null);
   }
 }

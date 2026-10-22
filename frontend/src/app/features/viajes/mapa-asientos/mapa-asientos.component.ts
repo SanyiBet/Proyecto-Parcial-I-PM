@@ -9,10 +9,10 @@ import {
   output,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ViajesService } from '../../core/services/viajes.service';
-import { AuthService } from '../../core/services/auth.service';
-import { SweetAlertService } from '../../core/services/sweet-alert.service';
-import { Viaje, Asiento, MapaAsientosRespuesta } from '../../core/models/viajes.models';
+import { ViajesService } from '../../../core/services/viajes.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { SweetAlertService } from '../../../core/services/sweet-alert.service';
+import { Viaje, Asiento, MapaAsientosRespuesta } from '../../../core/models/viajes.models';
 
 @Component({
   selector: 'app-mapa-asientos',
@@ -28,7 +28,12 @@ export class MapaAsientosComponent implements OnInit, OnDestroy {
   private sweetAlert = inject(SweetAlertService);
 
   public volver = output<void>();
-  public reservaConfirmada = output<{ viaje_id: string; asientos: string[]; total: number }>();
+  public reservaConfirmada = output<{
+    viaje_id: string;
+    asientos: string[];
+    total: number;
+    reservas_ids: string[];
+  }>();
   public solicitarLogin = output<void>();
 
   // Estados
@@ -40,6 +45,7 @@ export class MapaAsientosComponent implements OnInit, OnDestroy {
   // Temporizador de 10 minutos (TTL 600s)
   public segundosRestantes = signal<number>(0);
   public reservaActivaId = signal<string | null>(null);
+  public reservasIds = signal<string[]>([]);
   private intervaloTimer: any = null;
 
   // Total calculado
@@ -78,14 +84,14 @@ export class MapaAsientosComponent implements OnInit, OnDestroy {
     });
   }
 
-  private comprobarReservaActiva(): void {
+  public comprobarReservaActiva(): void {
     if (!this.authService.estaAutenticado()) return;
 
     this.viajesService.obtenerReservaActiva().subscribe({
       next: (res) => {
-        if (res.reserva && res.reserva.viaje_id === this.viaje._id) {
-          this.asientosSeleccionados.set(res.reserva.asientos);
-          this.iniciarTimer(res.segundos_restantes || 600);
+        if (res.reserva && res.reserva.viaje_id === this.viaje._id && (res.segundos_restantes || 0) > 0) {
+          this.asientosSeleccionados.set(res.reserva.asientos || []);
+          this.iniciarTimer(res.segundos_restantes!);
         }
       },
       error: () => {},
@@ -93,26 +99,28 @@ export class MapaAsientosComponent implements OnInit, OnDestroy {
   }
 
   public alternarAsiento(asiento: Asiento): void {
-    // Si el asiento no está disponible y no es de los míos, no hacer nada
     if (asiento.estado === 'ocupado' || asiento.estado === 'bloqueado_temporal') {
       return;
     }
 
-    const seleccionados = this.asientosSeleccionados();
+    const seleccionados = [...this.asientosSeleccionados()];
     const index = seleccionados.indexOf(asiento.numero);
 
     if (index > -1) {
-      this.asientosSeleccionados.update((lista) => lista.filter((n) => n !== asiento.numero));
+      seleccionados.splice(index, 1);
     } else {
-      if (seleccionados.length >= 4) {
-        this.sweetAlert.advertencia(
-          'Límite de selección',
-          'Puedes reservar un máximo de 4 asientos por transacción.'
-        );
+      if (seleccionados.length >= 5) {
+        this.sweetAlert.advertencia('Límite de selección', 'Puedes seleccionar hasta 5 asientos por compra.');
         return;
       }
-      this.asientosSeleccionados.update((lista) => [...lista, asiento.numero]);
+      seleccionados.push(asiento.numero);
     }
+
+    this.asientosSeleccionados.set(seleccionados);
+  }
+
+  public esSeleccionado(numero: string): boolean {
+    return this.asientosSeleccionados().includes(numero);
   }
 
   public esAsientoSeleccionado(numero: string): boolean {
@@ -122,8 +130,8 @@ export class MapaAsientosComponent implements OnInit, OnDestroy {
   public async confirmarReservaTemporal(): Promise<void> {
     if (!this.authService.estaAutenticado()) {
       const quiereIngresar = await this.sweetAlert.confirmar(
-        'Iniciar Sesión Requerido',
-        'Para bloquear y reservar asientos en tiempo real, debes iniciar sesión o crear tu cuenta.',
+        'Inicio de Sesión Requerido',
+        'Para bloquear y reservar tus asientos debes iniciar sesión o crear una cuenta.',
         'Iniciar Sesión',
         'Cancelar'
       );
@@ -138,21 +146,37 @@ export class MapaAsientosComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Si ya tiene una reserva activa y el temporizador está corriendo, avanza directo al formulario
+    if (this.segundosRestantes() > 0) {
+      this.reservaConfirmada.emit({
+        viaje_id: this.viaje._id,
+        asientos: this.asientosSeleccionados(),
+        total: this.totalPagar(),
+        reservas_ids: this.reservasIds(),
+      });
+      return;
+    }
+
     this.reservando.set(true);
 
     this.viajesService.crearReservaTemporal(this.viaje._id, this.asientosSeleccionados()).subscribe({
       next: (res) => {
         this.reservando.set(false);
-        this.sweetAlert.exito(
-          '¡Asientos Bloqueados Exitosamente!',
-          `Tienes 10 minutos para ingresar los datos de tus pasajeros y pagar antes de que los asientos se liberen automáticamente.`
-        );
+        const ids = res.reservas_ids || [];
+        this.reservasIds.set(ids);
         this.iniciarTimer(res.tiempo_limite_segundos || 600);
         this.cargarMapaAsientos();
+
+        this.reservaConfirmada.emit({
+          viaje_id: this.viaje._id,
+          asientos: this.asientosSeleccionados(),
+          total: res.total || this.totalPagar(),
+          reservas_ids: ids,
+        });
       },
       error: (err: any) => {
         this.reservando.set(false);
-        this.cargarMapaAsientos(); // Refrescar para ver quién lo ocupó
+        this.cargarMapaAsientos();
         this.sweetAlert.error(
           'Conflicto de reserva',
           err.error?.mensaje || 'No se pudieron reservar los asientos seleccionados.'

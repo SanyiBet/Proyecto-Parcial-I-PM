@@ -1,9 +1,9 @@
 import { Component, OnInit, inject, signal, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ViajesService } from '../../core/services/viajes.service';
-import { Viaje, Ruta } from '../../core/models/viajes.models';
-import { SweetAlertService } from '../../core/services/sweet-alert.service';
+import { ViajesService } from '../../../core/services/viajes.service';
+import { Viaje, Ruta } from '../../../core/models/viajes.models';
+import { SweetAlertService } from '../../../core/services/sweet-alert.service';
 
 @Component({
   selector: 'app-buscador-viajes',
