@@ -50,4 +50,5 @@ export interface ReservaTemporalRespuesta {
   total: number;
   tiempo_limite_segundos: number;
   vence_en: string;
+  reservas_ids?: string[];
 }

@@ -1,0 +1,260 @@
+<div class="max-w-5xl mx-auto px-4 sm:px-6 py-8 animate-fade-in space-y-8">
+  <!-- Encabezado con Botón Volver -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+    <div>
+      <button
+        type="button"
+        (click)="volverAlMapa.emit()"
+        class="inline-flex items-center text-xs font-bold text-transorense-verde hover:underline mb-2 group transition-colors"
+      >
+        <span class="mr-1 group-hover:-translate-x-1 transition-transform">←</span> Volver a Selección de Asientos
+      </button>
+      <h2 class="font-montserrat font-black text-2xl sm:text-3xl text-slate-900 dark:text-white tracking-tight">
+        Datos de Pasajeros y Pago de Boletos
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+        Ruta: <strong class="text-slate-800 dark:text-slate-200">{{ viaje.ruta.origen }} ➔ {{ viaje.ruta.destino }}</strong>
+        | Asientos: <span class="font-mono font-bold text-transorense-verde">#{{ asientos.join(', #') }}</span>
+      </p>
+    </div>
+
+    <!-- Badge Total a Pagar -->
+    <div class="bg-gradient-to-br from-transorense-verde to-emerald-800 text-white px-6 py-3 rounded-2xl shadow-md text-right">
+      <span class="text-[11px] uppercase font-semibold text-emerald-200 block">Total a Transferir</span>
+      <span class="font-montserrat font-black text-2xl tracking-tight">${{ total | number: '1.2-2' }}</span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <!-- COLUMNA IZQUIERDA: FORMULARIO DE PASAJEROS (lg:col-span-7) -->
+    <div class="lg:col-span-7 space-y-6">
+      <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-sm space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-4">
+          <div class="flex items-center space-x-3">
+            <span class="w-8 h-8 rounded-xl bg-transorense-verde/10 text-transorense-verde flex items-center justify-center font-black text-sm">
+              1
+            </span>
+            <h3 class="font-montserrat font-bold text-lg text-slate-900 dark:text-white">
+              Datos de los Pasajeros
+            </h3>
+          </div>
+
+          <!-- Switch para rellenar titular -->
+          <label *ngIf="asientos.length > 0" class="inline-flex items-center cursor-pointer text-xs font-medium text-slate-600 dark:text-slate-400 select-none">
+            <input
+              type="checkbox"
+              [checked]="primerPasajeroEsTitular()"
+              (change)="toggleTitular()"
+              class="sr-only peer"
+            />
+            <div class="relative w-8 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all dark:border-slate-600 peer-checked:bg-transorense-verde"></div>
+            <span class="ms-2">Soy el pasajero 1</span>
+          </label>
+        </div>
+
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          Puedes comprar pasajes para ti o para terceras personas. Cada boleto requiere nombre completo y cédula ecuatoriana válida.
+        </p>
+
+        <!-- Tarjetas dinámicas por cada asiento -->
+        <div class="space-y-4">
+          <div
+            *ngFor="let p of pasajeros(); let i = index"
+            class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/70 space-y-3"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-black uppercase text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <span class="w-6 h-6 rounded-lg bg-transorense-amarillo text-slate-900 font-mono font-black flex items-center justify-center text-xs shadow-xs">
+                  #{{ p.asiento }}
+                </span>
+                Pasajero para Asiento {{ p.asiento }}
+              </span>
+              <span class="text-[11px] font-semibold text-transorense-verde bg-transorense-verde/10 px-2.5 py-0.5 rounded-full">
+                Boleto ${{ viaje.precio | number: '1.2-2' }}
+              </span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  Nombre Completo *
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="p.nombre"
+                  placeholder="Ej: Carlos Andrade Murillo"
+                  class="w-full px-3.5 py-2 rounded-xl text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-transorense-verde/30"
+                />
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  Cédula de Identidad (10 dígitos) *
+                </label>
+                <input
+                  type="text"
+                  maxlength="10"
+                  [(ngModel)]="p.identificacion"
+                  (blur)="validarCedulaPasajero(i)"
+                  placeholder="Ej: 0704567890"
+                  class="w-full px-3.5 py-2 rounded-xl text-xs font-mono bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-transorense-verde/30"
+                  [ngClass]="{ 'border-red-500 focus:ring-red-300': p.errorCedula }"
+                />
+                <span *ngIf="p.errorCedula" class="text-[10px] text-red-500 font-medium block mt-1">
+                  ⚠️ {{ p.errorCedula }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMNA DERECHA: PAGO BANCARIO Y CARGA DE COMPROBANTE (lg:col-span-5) -->
+    <div class="lg:col-span-5 space-y-6">
+      <!-- Cuentas Bancarias Oficiales -->
+      <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-3xl p-6 shadow-md border border-slate-700 space-y-4">
+        <div class="flex items-center space-x-2">
+          <span class="text-transorense-amarillo text-lg">🏦</span>
+          <h4 class="font-montserrat font-bold text-sm tracking-wide">
+            Cuentas Oficiales TransOrense
+          </h4>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div class="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1">
+            <div class="flex justify-between font-bold text-transorense-amarillo">
+              <span>Banco Pichincha</span>
+              <span class="text-[10px] bg-yellow-400/20 text-yellow-300 px-2 py-0.5 rounded">Cta. Corriente</span>
+            </div>
+            <div class="font-mono text-slate-200"># 2100458921</div>
+            <div class="text-[10px] text-slate-400">Titular: COOP. TRANSORENSE | RUC: 0791745829001</div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1">
+            <div class="flex justify-between font-bold text-emerald-400">
+              <span>Banco de Guayaquil</span>
+              <span class="text-[10px] bg-emerald-400/20 text-emerald-300 px-2 py-0.5 rounded">Cta. Corriente</span>
+            </div>
+            <div class="font-mono text-slate-200"># 1048291034</div>
+            <div class="text-[10px] text-slate-400">Titular: COOP. TRANSORENSE | RUC: 0791745829001</div>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-slate-300 italic flex items-center gap-1.5">
+          <span>ℹ️</span> Realiza la transferencia por el total exacto de <strong>${{ total | number: '1.2-2' }}</strong>.
+        </div>
+      </div>
+
+      <!-- Formulario de Subida de Comprobante -->
+      <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-sm space-y-5">
+        <div class="flex items-center space-x-3 border-b border-slate-100 dark:border-slate-700/60 pb-3">
+          <span class="w-8 h-8 rounded-xl bg-transorense-amarillo/20 text-slate-900 dark:text-transorense-amarillo flex items-center justify-center font-black text-sm">
+            2
+          </span>
+          <h3 class="font-montserrat font-bold text-base text-slate-900 dark:text-white">
+            Registrar Comprobante
+          </h3>
+        </div>
+
+        <!-- Número de Referencia Bancaria -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+            Número de Referencia / Transacción *
+          </label>
+          <input
+            type="text"
+            [(ngModel)]="referencia"
+            placeholder="Ej: 98451230 o código de transferencia"
+            class="w-full px-4 py-2.5 rounded-xl text-xs font-mono bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-transorense-verde/30 font-semibold"
+          />
+          <span class="text-[10px] text-slate-400 mt-1 block">
+            Código numérico o alfanumérico emitido por tu banca web/móvil.
+          </span>
+        </div>
+
+        <!-- Dropzone de Archivo de Comprobante -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+            Foto o Captura del Comprobante *
+          </label>
+
+          <!-- Si aún no hay archivo cargado -->
+          <div
+            *ngIf="!comprobanteBase64()"
+            (dragover)="onDragOver($event)"
+            (drop)="onFileDrop($event)"
+            class="border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-transorense-verde rounded-2xl p-5 text-center cursor-pointer transition-colors bg-slate-50/50 dark:bg-slate-900/30 group"
+          >
+            <input
+              type="file"
+              id="fileComprobante"
+              accept="image/png,image/jpeg,image/webp,application/pdf"
+              (change)="onArchivoSeleccionado($event)"
+              class="hidden"
+            />
+            <label for="fileComprobante" class="cursor-pointer block space-y-2">
+              <span class="text-3xl block text-slate-400 group-hover:scale-110 transition-transform">📄</span>
+              <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
+                Haz clic para subir o arrastra aquí tu comprobante
+              </span>
+              <span class="text-[10px] text-slate-400 block">
+                Formatos: JPG, PNG, WEBP o PDF (Máx. 5 MB)
+              </span>
+            </label>
+          </div>
+
+          <!-- Si ya hay archivo cargado: Vista Previa -->
+          <div
+            *ngIf="comprobanteBase64()"
+            class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-3"
+          >
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2 overflow-hidden">
+                <span class="text-xl">📎</span>
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                  {{ comprobanteNombre() }}
+                </span>
+              </div>
+              <button
+                type="button"
+                (click)="quitarArchivo()"
+                class="text-xs text-red-500 hover:text-red-700 font-bold px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+              >
+                Eliminar
+              </button>
+            </div>
+
+            <!-- Miniatura si es imagen -->
+            <div *ngIf="vistaPreviaUrl()" class="rounded-xl overflow-hidden max-h-48 border border-slate-200 dark:border-slate-700 bg-white">
+              <img [src]="vistaPreviaUrl()" alt="Comprobante" class="w-full h-auto object-contain max-h-48" />
+            </div>
+            <!-- Indicador si es PDF -->
+            <div *ngIf="!vistaPreviaUrl()" class="p-3 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 rounded-xl text-xs font-medium flex items-center gap-2">
+              <span>📕</span> Documento PDF listo para verificar por boletería.
+            </div>
+          </div>
+        </div>
+
+        <!-- Botón de Envío -->
+        <button
+          type="button"
+          (click)="enviarFormulario()"
+          [disabled]="procesando()"
+          class="w-full btn-transorense-primary py-3.5 rounded-2xl font-bold text-sm shadow-lg disabled:opacity-50 flex items-center justify-center space-x-2 transition-transform active:scale-[0.98]"
+        >
+          <span *ngIf="!procesando()">
+            ✓ Confirmar y Enviar Comprobante
+          </span>
+          <span *ngIf="procesando()">
+            Registrando comprobante...
+          </span>
+        </button>
+
+        <div class="text-[10px] text-slate-400 text-center leading-relaxed">
+          🔒 Tus comprobantes se almacenan de manera local y encriptada en los servidores de TransOrense.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

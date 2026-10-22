@@ -101,11 +101,23 @@
 
   <!-- Vista 2: Mapa Interactivo de Asientos y Temporizador de 10 min (CARD-16) -->
   <app-mapa-asientos
-    *ngIf="viajeActivo()"
+    *ngIf="viajeActivo() && !reservaParaPago()"
     [viaje]="viajeActivo()!"
     (volver)="onVolverABuscador()"
     (solicitarLogin)="abrirModalAuth()"
+    (reservaConfirmada)="onReservaConfirmada($event)"
   ></app-mapa-asientos>
+
+  <!-- Vista 3: Formulario de Datos de Pasajeros y Carga de Comprobante (CARD-18) -->
+  <app-formulario-pago
+    *ngIf="reservaParaPago()"
+    [viaje]="reservaParaPago()!.viaje"
+    [asientos]="reservaParaPago()!.asientos"
+    [total]="reservaParaPago()!.total"
+    [reservasIds]="reservaParaPago()!.reservas_ids"
+    (volverAlMapa)="onVolverAlMapa()"
+    (pagoExitoso)="onPagoExitoso()"
+  ></app-formulario-pago>
 
   <router-outlet></router-outlet>
 </main>
