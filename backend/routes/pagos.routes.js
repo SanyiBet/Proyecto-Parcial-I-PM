@@ -10,6 +10,7 @@ const {
   listarPagosPendientes,
   aprobarPago,
   rechazarPago,
+  verComprobanteProtegido,
 } = require("../controllers/pagos.controller");
 const { authMiddleware, roleMiddleware } = require("../middleware/auth.middleware");
 
@@ -17,6 +18,9 @@ const router = Router();
 
 // Requiere sesión de usuario
 router.use(authMiddleware);
+
+// Visualización protegida bajo LOPDP de comprobante bancario (CARD-32)
+router.get("/comprobante/:nombreArchivo", verComprobanteProtegido);
 
 // Registro de pago por el cliente
 router.post("/", registrarPago);

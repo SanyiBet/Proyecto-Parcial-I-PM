@@ -13,7 +13,13 @@ app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// Servidor estático seguro para visualización de comprobantes bancarios
+// Protección LOPDP: Bloqueo de acceso estático público a comprobantes bancarios (CARD-32)
+app.use("/uploads/comprobantes", (req, res) => {
+  return res.status(403).json({
+    error: "Acceso denegado (Protección LOPDP)",
+    mensaje: "Los comprobantes bancarios están protegidos. Acceda mediante /api/pagos/comprobante/:archivo con sesión autenticada.",
+  });
+});
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Endpoint de verificación de salud del sistema (Health Check)
