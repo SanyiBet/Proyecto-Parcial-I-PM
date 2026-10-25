@@ -214,9 +214,13 @@ async function buscarViajes(req, res, next) {
     for (const v of viajes) {
       try {
         const bloqueos = await obtenerAsientosBloqueados(v._id);
+        const ahora = new Date();
         const asientosOcupadosAtlas = await db.collection("reservas").countDocuments({
           viaje_id: v._id,
-          estado: { $in: ["reservada", "pendiente_verificacion", "confirmada"] },
+          $or: [
+            { estado: { $in: ["pendiente_verificacion", "confirmada"] } },
+            { estado: "reservada", vence_en: { $gt: ahora } },
+          ],
         });
 
         const totalBloqueados = (bloqueos?.length || 0) + asientosOcupadosAtlas;
@@ -255,12 +259,16 @@ async function obtenerMapaAsientos(req, res, next) {
       db.collection("rutas").findOne({ _id: viaje.ruta_id }),
     ]);
 
-    // 1. Asientos activos en Atlas
+    // 1. Asientos activos en Atlas (CARD-29: ignorar reservas temporales expiradas)
+    const ahora = new Date();
     const reservasAtlas = await db
       .collection("reservas")
       .find({
         viaje_id: id,
-        estado: { $in: ["reservada", "pendiente_verificacion", "confirmada"] },
+        $or: [
+          { estado: { $in: ["pendiente_verificacion", "confirmada"] } },
+          { estado: "reservada", vence_en: { $gt: ahora } },
+        ],
       })
       .toArray();
 

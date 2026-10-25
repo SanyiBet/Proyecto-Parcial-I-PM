@@ -78,12 +78,17 @@ app.use((err, req, res, next) => {
   });
 });
 
+const { iniciarWorkerLimpieza } = require("./services/limpieza-reservas.service");
+
 // Inicio del servidor con conexión a MongoDB Atlas y Upstash Redis
 async function iniciarServidor() {
   try {
     await conectarDB();
     const redisPing = await pingRedis();
     console.log(`✅ Conexión establecida con Upstash Redis: [${redisPing}] - Clave-Valor / TTL activo`);
+
+    // Iniciar worker en segundo plano para limpiar y expirar reservas vencidas (CARD-29)
+    iniciarWorkerLimpieza(60000);
 
     app.listen(PORT, () => {
       console.log(`🚀 Servidor TransOrense activo en: http://localhost:${PORT}`);

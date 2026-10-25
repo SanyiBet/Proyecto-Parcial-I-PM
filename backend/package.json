@@ -17,7 +17,8 @@
     "test:card21": "node tests/test-card21.js",
     "test:auditoria": "node tests/test-auditoria-incidencias.js",
     "test:e2e": "node tests/test-e2e.js",
-    "test": "node tests/test-card06.js && node tests/test-card07.js && node tests/test-card08-09.js && node tests/test-card17.js && node tests/test-card19.js && node tests/test-card20.js && node tests/test-card21.js && node tests/test-auditoria-incidencias.js && node tests/test-e2e.js"
+    "test:card29": "node tests/test-card29.js",
+    "test": "node tests/test-card06.js && node tests/test-card07.js && node tests/test-card08-09.js && node tests/test-card17.js && node tests/test-card19.js && node tests/test-card20.js && node tests/test-card21.js && node tests/test-auditoria-incidencias.js && node tests/test-e2e.js && node tests/test-card29.js"
   },
   "keywords": [],
   "author": "",
