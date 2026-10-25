@@ -312,7 +312,7 @@ async function registrarEncomienda(req, res, next) {
         entidad: "encomiendas",
         entidad_id: nuevaEncomiendaId,
         fecha: ahora,
-        estado: "exitoso",
+        estado: "registrado",
       });
     } catch (e) {
       console.warn("Aviso auditoría encomienda:", e.message);
@@ -567,7 +567,7 @@ async function registrarMovimientoEncomienda(req, res, next) {
         entidad: "encomiendas",
         entidad_id: encomienda._id,
         fecha: ahora,
-        estado: "exitoso",
+        estado: "registrado",
       });
     } catch (e) {
       console.warn("Aviso auditoría movimiento encomienda:", e.message);
