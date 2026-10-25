@@ -5,13 +5,49 @@ const path = require("path");
 const { conectarDB } = require("./database/connection");
 const { pingRedis } = require("./database/redis");
 
+const {
+  limiterAuth,
+  limiterReservas,
+  limiterGeneral,
+} = require("./middleware/rate-limit.middleware");
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Configuración estricta de CORS (CARD-33)
+const origenesPermitidos = [
+  "http://localhost:4200",
+  "http://127.0.0.1:4200",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permitir solicitudes sin origen (Postman, curl, tests internos, apps móviles)
+    if (!origin || origenesPermitidos.includes(origin)) {
+      return callback(null, true);
+    }
+    const err = new Error(`Acceso denegado por política CORS: El origen '${origin}' no está autorizado.`);
+    err.status = 403;
+    return callback(err);
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "x-bypass-ratelimit"],
+};
+
 // Middlewares globales de seguridad y parseo (soporta imágenes base64 hasta 10MB)
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+// Rate Limiting preventivo y específico (CARD-33)
+app.use("/api", limiterGeneral);
+app.use("/api/auth/login", limiterAuth);
+app.use("/api/auth/register", limiterAuth);
+app.use("/api/reservas", limiterReservas);
 
 // Protección LOPDP: Bloqueo de acceso estático público a comprobantes bancarios (CARD-32)
 app.use("/uploads/comprobantes", (req, res) => {
@@ -72,11 +108,17 @@ app.use((req, res) => {
   });
 });
 
-// Manejo centralizado de errores del servidor (500)
+// Manejo centralizado de errores del servidor (500 / 403 CORS)
 app.use((err, req, res, next) => {
+  if (err.message && err.message.includes("CORS")) {
+    return res.status(403).json({
+      error: "Acceso denegado por política CORS",
+      mensaje: err.message,
+    });
+  }
   console.error("❌ Error interno en el servidor:", err);
-  res.status(err.status || 500).json({
-    error: "Error interno del servidor",
+  res.status(err.status || err.statusCode || 500).json({
+    error: err.statusCode === 400 ? "Solicitud inválida" : "Error interno del servidor",
     mensaje:
       process.env.NODE_ENV === "production"
         ? "Ocurrió un error inesperado"
