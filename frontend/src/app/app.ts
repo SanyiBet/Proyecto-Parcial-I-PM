@@ -12,6 +12,7 @@ import { FormularioPagoComponent } from './features/viajes/formulario-pago/formu
 import { PanelBoleteriaComponent } from './features/boleteria/panel-boleteria/panel-boleteria.component';
 import { EncomiendasPublicoComponent } from './features/encomiendas/encomiendas-publico/encomiendas-publico.component';
 import { PanelOperadorEncomiendasComponent } from './features/encomiendas/panel-operador-encomiendas/panel-operador-encomiendas.component';
+import { MiCuentaComponent } from './features/cliente/mi-cuenta/mi-cuenta.component';
 import { Viaje } from './core/models/viajes.models';
 
 @Component({
@@ -28,6 +29,7 @@ import { Viaje } from './core/models/viajes.models';
     PanelBoleteriaComponent,
     EncomiendasPublicoComponent,
     PanelOperadorEncomiendasComponent,
+    MiCuentaComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -37,8 +39,8 @@ export class App {
   public sweetAlert = inject(SweetAlertService);
   public authService = inject(AuthService);
 
-  // Módulo activo en la aplicación ('viajes' | 'boleteria' | 'encomiendas' | 'operador_encomiendas')
-  public moduloActivo = signal<'viajes' | 'boleteria' | 'encomiendas' | 'operador_encomiendas'>('viajes');
+  // Módulo activo en la aplicación ('viajes' | 'boleteria' | 'encomiendas' | 'operador_encomiendas' | 'mi_cuenta')
+  public moduloActivo = signal<'viajes' | 'boleteria' | 'encomiendas' | 'operador_encomiendas' | 'mi_cuenta'>('viajes');
 
   // Control de permisos para Agente de Boletería y Administrador (CARD-19)
   public puedeAccederBoleteria = computed(() => {
@@ -110,6 +112,10 @@ export class App {
 
   public irAOperadorEncomiendas(): void {
     this.moduloActivo.set('operador_encomiendas');
+  }
+
+  public irAMiCuenta(): void {
+    this.moduloActivo.set('mi_cuenta');
   }
 
   public onReservaConfirmada(evento: {

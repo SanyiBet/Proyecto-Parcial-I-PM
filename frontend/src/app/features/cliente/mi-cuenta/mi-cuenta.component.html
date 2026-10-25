@@ -1,0 +1,441 @@
+<div class="space-y-6">
+  <!-- Cabecera de Bienvenida y Perfil del Cliente -->
+  <div class="bg-gradient-to-r from-transorense-verde via-emerald-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div class="flex items-center space-x-4">
+        <div class="w-16 h-16 rounded-2xl bg-transorense-amarillo text-slate-900 flex items-center justify-center font-black text-2xl shadow-lg">
+          {{ authService.usuarioActual()?.nombre?.charAt(0) || 'U' }}
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-xl sm:text-2xl font-extrabold font-montserrat">
+              ¡Hola, {{ authService.usuarioActual()?.nombre }}!
+            </h1>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-transorense-amarillo/20 text-transorense-amarillo border border-transorense-amarillo/30 uppercase">
+              Cliente
+            </span>
+          </div>
+          <p class="text-xs sm:text-sm text-emerald-100 dark:text-slate-300 mt-1">
+            {{ authService.usuarioActual()?.correo }} • Cédula: {{ authService.usuarioActual()?.cedula || 'Sin vincular' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Métricas rápidas del cliente -->
+      <div class="flex items-center space-x-3">
+        <div class="px-4 py-2.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 text-center">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-200 block">Boletos</span>
+          <span class="text-xl font-black font-montserrat">{{ reservas().length }}</span>
+        </div>
+        <div class="px-4 py-2.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 text-center">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-200 block">Pagos</span>
+          <span class="text-xl font-black font-montserrat">{{ pagos().length }}</span>
+        </div>
+        <div class="px-4 py-2.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 text-center">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-200 block">Encomiendas</span>
+          <span class="text-xl font-black font-montserrat">{{ encomiendas().length }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de Pestañas Interactivas -->
+  <div class="flex p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 max-w-xl mx-auto shadow-xs">
+    <button
+      type="button"
+      (click)="cambiarPestana('boletos')"
+      class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5"
+      [ngClass]="pestanaActiva() === 'boletos' ? 'bg-white dark:bg-slate-900 text-transorense-verde dark:text-emerald-400 shadow-sm font-extrabold' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'"
+    >
+      <span>🎫</span>
+      <span>Mis Boletos ({{ reservas().length }})</span>
+    </button>
+    <button
+      type="button"
+      (click)="cambiarPestana('pagos')"
+      class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5"
+      [ngClass]="pestanaActiva() === 'pagos' ? 'bg-white dark:bg-slate-900 text-transorense-verde dark:text-emerald-400 shadow-sm font-extrabold' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'"
+    >
+      <span>💳</span>
+      <span>Mis Pagos</span>
+    </button>
+    <button
+      type="button"
+      (click)="cambiarPestana('encomiendas')"
+      class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5"
+      [ngClass]="pestanaActiva() === 'encomiendas' ? 'bg-white dark:bg-slate-900 text-transorense-verde dark:text-emerald-400 shadow-sm font-extrabold' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'"
+    >
+      <span>📦</span>
+      <span>Encomiendas</span>
+    </button>
+    <button
+      type="button"
+      (click)="cambiarPestana('perfil')"
+      class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5"
+      [ngClass]="pestanaActiva() === 'perfil' ? 'bg-white dark:bg-slate-900 text-transorense-verde dark:text-emerald-400 shadow-sm font-extrabold' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'"
+    >
+      <span>👤</span>
+      <span>Perfil</span>
+    </button>
+  </div>
+
+  <!-- PESTAÑA 1: MIS BOLETOS -->
+  <div *ngIf="pestanaActiva() === 'boletos'" class="space-y-4">
+    <div *ngIf="cargando()" class="py-16 text-center space-y-3">
+      <div class="w-10 h-10 border-4 border-transorense-verde border-t-transparent rounded-full animate-spin mx-auto"></div>
+      <p class="text-xs text-slate-500 font-medium">Cargando tus boletos...</p>
+    </div>
+
+    <div *ngIf="!cargando() && reservas().length === 0" class="bg-white dark:bg-slate-800 rounded-3xl p-12 text-center border border-slate-200 dark:border-slate-700 space-y-3">
+      <span class="text-5xl block">🚌</span>
+      <h3 class="font-montserrat font-bold text-base text-slate-800 dark:text-slate-200">
+        Aún no tienes boletos registrados
+      </h3>
+      <p class="text-xs text-slate-400 max-w-sm mx-auto">
+        Cuando reserves un viaje y subas tu comprobante de pago, tus pasajes aparecerán aquí con su código QR para abordar.
+      </p>
+    </div>
+
+    <div *ngIf="!cargando() && reservas().length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div
+        *ngFor="let r of reservas()"
+        class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+      >
+        <div class="space-y-3">
+          <!-- Encabezado de la tarjeta con Ruta y Estado -->
+          <div class="flex items-start justify-between">
+            <div>
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Ruta</span>
+              <div class="font-montserrat font-black text-sm text-slate-900 dark:text-white">
+                {{ r.viaje?.ruta?.origen || 'Origen' }} ➔ {{ r.viaje?.ruta?.destino || 'Destino' }}
+              </div>
+            </div>
+            <!-- Badge de Estado -->
+            <span
+              class="text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase"
+              [ngClass]="{
+                'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300': r.estado === 'confirmada',
+                'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300': r.estado === 'pendiente_verificacion',
+                'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300': r.estado === 'reservada',
+                'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300': r.estado === 'cancelada' || r.estado === 'expirada'
+              }"
+            >
+              {{ r.estado === 'confirmada' ? 'Confirmado ✅' : r.estado === 'pendiente_verificacion' ? 'En Revisión ⏳' : r.estado }}
+            </span>
+          </div>
+
+          <!-- Detalles del Viaje y Asiento -->
+          <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 space-y-1.5 text-xs">
+            <div class="flex justify-between">
+              <span class="text-slate-400">Asiento Reservado:</span>
+              <span class="font-bold text-slate-800 dark:text-slate-200">#{{ r.asiento_numero }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Salida:</span>
+              <span class="font-bold text-slate-800 dark:text-slate-200">
+                {{ r.viaje?.salida ? (r.viaje?.salida | date: 'dd/MM/yyyy • HH:mm') : 'Por definir' }}
+              </span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Pasajero:</span>
+              <span class="font-bold text-slate-800 dark:text-slate-200">
+                {{ r.pasajero?.nombre || 'Titular de la cuenta' }}
+              </span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Precio Pagado:</span>
+              <span class="font-extrabold text-transorense-verde">
+                ${{ r.precio_final | number: '1.2-2' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botón Ver Boleto -->
+        <button
+          type="button"
+          (click)="abrirModalBoleto(r)"
+          class="mt-4 w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-2"
+          [ngClass]="r.estado === 'confirmada' ? 'bg-transorense-verde text-white hover:bg-emerald-700 shadow-sm' : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200'"
+        >
+          <span>🎫 Ver Boleto Digital</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PESTAÑA 2: MIS PAGOS -->
+  <div *ngIf="pestanaActiva() === 'pagos'" class="space-y-4">
+    <div *ngIf="pagos().length === 0" class="bg-white dark:bg-slate-800 rounded-3xl p-12 text-center border border-slate-200 dark:border-slate-700 space-y-3">
+      <span class="text-5xl block">💳</span>
+      <h3 class="font-montserrat font-bold text-base text-slate-800 dark:text-slate-200">
+        No tienes comprobantes de pago registrados
+      </h3>
+      <p class="text-xs text-slate-400 max-w-sm mx-auto">
+        Tus transferencias y depósitos bancarios reportados aparecerán aquí con su estado de validación en boletería.
+      </p>
+    </div>
+
+    <div *ngIf="pagos().length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div
+        *ngFor="let p of pagos()"
+        class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm space-y-3"
+      >
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-bold text-slate-400 uppercase">Referencia</span>
+            <div class="font-mono font-bold text-sm text-slate-900 dark:text-white">
+              #{{ p.referencia }}
+            </div>
+          </div>
+          <!-- Badge de Estado del Pago -->
+          <span
+            class="text-[10px] font-extrabold px-3 py-1 rounded-full uppercase"
+            [ngClass]="{
+              'bg-emerald-100 text-emerald-800 border border-emerald-300': p.estado === 'aprobado',
+              'bg-amber-100 text-amber-800 border border-amber-300': p.estado === 'en_revision',
+              'bg-rose-100 text-rose-800 border border-rose-300': p.estado === 'rechazado'
+            }"
+          >
+            {{ p.estado === 'aprobado' ? 'Aprobado ✅' : p.estado === 'en_revision' ? 'En Revisión ⏳' : 'Rechazado ❌' }}
+          </span>
+        </div>
+
+        <div class="text-xs space-y-1 text-slate-600 dark:text-slate-300">
+          <div class="flex justify-between">
+            <span class="text-slate-400">Importe:</span>
+            <span class="font-bold text-transorense-verde font-mono">${{ p.importe | number: '1.2-2' }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Fecha de Registro:</span>
+            <span>{{ p.creado_en | date: 'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        </div>
+
+        <!-- Alerta de Rechazo si aplica -->
+        <div *ngIf="p.estado === 'rechazado' && p.motivo_rechazo" class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs">
+          <strong>Motivo de rechazo:</strong> {{ p.motivo_rechazo }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PESTAÑA 3: MIS ENCOMIENDAS -->
+  <div *ngIf="pestanaActiva() === 'encomiendas'" class="space-y-4">
+    <div *ngIf="encomiendas().length === 0" class="bg-white dark:bg-slate-800 rounded-3xl p-12 text-center border border-slate-200 dark:border-slate-700 space-y-3">
+      <span class="text-5xl block">📦</span>
+      <h3 class="font-montserrat font-bold text-base text-slate-800 dark:text-slate-200">
+        No tienes encomiendas asociadas a tu cédula
+      </h3>
+      <p class="text-xs text-slate-400 max-w-sm mx-auto">
+        Cuando envíes o recibas paquetes con tu número de cédula en cualquier agencia TransOrense, podrás rastrearlos aquí en vivo.
+      </p>
+    </div>
+
+    <div *ngIf="encomiendas().length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div
+        *ngFor="let enc of encomiendas()"
+        class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm space-y-3"
+      >
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-bold text-slate-400 uppercase">Guía de Envío</span>
+            <div class="font-mono font-bold text-sm text-transorense-verde">
+              {{ enc.codigo_rastreo }}
+            </div>
+          </div>
+          <span class="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+            {{ enc.estado }}
+          </span>
+        </div>
+
+        <div class="text-xs space-y-1 text-slate-600 dark:text-slate-300">
+          <div class="flex justify-between">
+            <span class="text-slate-400">Trayecto:</span>
+            <span class="font-bold">{{ enc.origen }} ➔ {{ enc.destino }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Remitente:</span>
+            <span>{{ enc.remitente.nombre }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Destinatario:</span>
+            <span>{{ enc.destinatario.nombre }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Tarifa Pagada:</span>
+            <span class="font-mono font-bold text-transorense-verde">${{ enc.precio_final | number: '1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PESTAÑA 4: MI PERFIL -->
+  <div *ngIf="pestanaActiva() === 'perfil'" class="max-w-2xl mx-auto bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-sm space-y-6">
+    <h3 class="font-montserrat font-bold text-lg text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-700 pb-3">
+      Datos Personales de la Cuenta
+    </h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+      <div>
+        <label class="block font-bold text-slate-400 uppercase mb-1">Nombre Completo</label>
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100">
+          {{ authService.usuarioActual()?.nombre }}
+        </div>
+      </div>
+      <div>
+        <label class="block font-bold text-slate-400 uppercase mb-1">Correo Electrónico</label>
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100">
+          {{ authService.usuarioActual()?.correo }}
+        </div>
+      </div>
+      <div>
+        <label class="block font-bold text-slate-400 uppercase mb-1">Método de Acceso</label>
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100 capitalize">
+          {{ authService.usuarioActual()?.metodo_auth || 'Google OAuth' }}
+        </div>
+      </div>
+      <div>
+        <label class="block font-bold text-slate-400 uppercase mb-1">Cédula Oficial</label>
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 font-mono font-bold text-slate-800 dark:text-slate-100">
+          {{ authService.usuarioActual()?.cedula || 'Pendiente de vinculación' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Si no tiene cédula vinculada (caso Google) -->
+    <div *ngIf="!authService.usuarioActual()?.cedula" class="p-5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-900 space-y-3">
+      <div class="flex items-center space-x-2 text-amber-800 dark:text-amber-300 font-bold text-sm">
+        <span>⚠️</span>
+        <span>Vincular Cédula Ecuatoriana Requerida por la ANT</span>
+      </div>
+      <p class="text-xs text-amber-700 dark:text-amber-400">
+        Para emitir boletos con QR oficial a tu nombre, debes ingresar tu cédula de 10 dígitos verificada con el algoritmo oficial de Módulo 10.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input
+          type="text"
+          maxlength="10"
+          [(ngModel)]="nuevaCedula"
+          (input)="onCedulaChange()"
+          placeholder="Ej: 0704567890"
+          class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-xs font-mono"
+        />
+        <button
+          type="button"
+          [disabled]="!cedulaValida || vinculandoCedula()"
+          (click)="vincularCedula()"
+          class="btn-transorense-primary text-xs py-2.5 px-5 disabled:opacity-50"
+        >
+          <span *ngIf="!vinculandoCedula()">Vincular Cédula</span>
+          <span *ngIf="vinculandoCedula()">Validando...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FLOTANTE DE BOLETO DIGITAL CON CÓDIGO QR / IMPRIMIBLE -->
+<div *ngIf="mostrarModalBoleto() && boletoSeleccionado()" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-fade-in">
+  <div class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <!-- Header del Boleto -->
+    <div class="bg-transorense-verde p-5 text-white flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 rounded-lg bg-transorense-amarillo text-slate-900 flex items-center justify-center font-bold text-base">
+          🚌
+        </div>
+        <div>
+          <span class="font-montserrat font-extrabold text-sm block">COOPERATIVA TRANSORENSE</span>
+          <span class="text-[9px] uppercase tracking-wider text-emerald-200">Boleto Digital de Abordaje</span>
+        </div>
+      </div>
+      <button (click)="cerrarModalBoleto()" class="text-white/80 hover:text-white p-1">
+        ✕
+      </button>
+    </div>
+
+    <!-- Contenido del Boleto -->
+    <div class="p-6 space-y-4 text-xs text-slate-700 dark:text-slate-300">
+      <div class="text-center pb-3 border-b border-dashed border-slate-200 dark:border-slate-700">
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Trayecto Interprovincial</span>
+        <h2 class="text-xl font-black font-montserrat text-slate-900 dark:text-white mt-1">
+          {{ boletoSeleccionado()?.viaje?.ruta?.origen }} ➔ {{ boletoSeleccionado()?.viaje?.ruta?.destino }}
+        </h2>
+        <span class="text-xs text-transorense-verde font-semibold">
+          Salida: {{ boletoSeleccionado()?.viaje?.salida | date: 'dd/MM/yyyy • HH:mm' }}
+        </span>
+      </div>
+
+      <!-- Datos del Pasajero y Asiento -->
+      <div class="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800">
+        <div>
+          <span class="text-[9px] uppercase text-slate-400 font-bold block">Asiento Asignado</span>
+          <span class="text-2xl font-black font-montserrat text-transorense-verde">
+            #{{ boletoSeleccionado()?.asiento_numero }}
+          </span>
+        </div>
+        <div>
+          <span class="text-[9px] uppercase text-slate-400 font-bold block">Valor Pasaje</span>
+          <span class="text-2xl font-black font-montserrat text-slate-900 dark:text-white">
+            ${{ boletoSeleccionado()?.precio_final | number: '1.2-2' }}
+          </span>
+        </div>
+        <div class="col-span-2 pt-1 border-t border-slate-200 dark:border-slate-700">
+          <span class="text-[9px] uppercase text-slate-400 font-bold block">Pasajero Registrado</span>
+          <span class="font-bold text-slate-900 dark:text-white">
+            {{ boletoSeleccionado()?.pasajero?.nombre || authService.usuarioActual()?.nombre }}
+          </span>
+          <span class="text-slate-400 text-[11px] block">
+            Cédula: {{ boletoSeleccionado()?.pasajero?.identificacion || authService.usuarioActual()?.cedula || 'N/A' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Simulación Gráfica de Código QR de Abordaje -->
+      <div class="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 space-y-2">
+        <!-- Generador SVG de Código QR Simulado -->
+        <svg class="w-28 h-28 text-slate-900 dark:text-white" viewBox="0 0 100 100" fill="currentColor">
+          <rect x="10" y="10" width="25" height="25" fill="none" stroke="currentColor" stroke-width="4"/>
+          <rect x="17" y="17" width="11" height="11"/>
+          <rect x="65" y="10" width="25" height="25" fill="none" stroke="currentColor" stroke-width="4"/>
+          <rect x="72" y="17" width="11" height="11"/>
+          <rect x="10" y="65" width="25" height="25" fill="none" stroke="currentColor" stroke-width="4"/>
+          <rect x="17" y="72" width="11" height="11"/>
+          <rect x="42" y="12" width="6" height="6"/>
+          <rect x="52" y="12" width="6" height="6"/>
+          <rect x="42" y="24" width="6" height="6"/>
+          <rect x="42" y="38" width="8" height="8"/>
+          <rect x="65" y="45" width="8" height="8"/>
+          <rect x="80" y="55" width="8" height="8"/>
+          <rect x="48" y="72" width="8" height="8"/>
+          <rect x="70" y="78" width="12" height="12"/>
+        </svg>
+        <span class="font-mono text-[9px] text-slate-400">
+          ID: {{ boletoSeleccionado()?._id }}
+        </span>
+        <span class="text-[9px] text-transorense-verde font-bold uppercase tracking-wider">
+          Válido para abordar en Terminal
+        </span>
+      </div>
+
+      <!-- Acciones: Imprimir / Descargar -->
+      <div class="flex gap-2 pt-2">
+        <button
+          type="button"
+          (click)="imprimirBoleto()"
+          class="flex-1 btn-transorense-primary py-2.5 text-xs font-bold flex items-center justify-center space-x-1.5"
+        >
+          <span>🖨️ Imprimir / Guardar PDF</span>
+        </button>
+        <button
+          type="button"
+          (click)="cerrarModalBoleto()"
+          class="py-2.5 px-4 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800"
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

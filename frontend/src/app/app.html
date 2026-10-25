@@ -62,6 +62,18 @@
         <span>🚛 Operador Carga</span>
         <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-950 text-emerald-200 font-mono">Operador</span>
       </button>
+
+      <!-- Botón Mi Cuenta para Clientes Autenticados (CARD-25) -->
+      <button
+        *ngIf="authService.estaAutenticado()"
+        type="button"
+        (click)="irAMiCuenta()"
+        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+        [ngClass]="moduloActivo() === 'mi_cuenta' ? 'bg-transorense-azul text-white shadow-xs font-extrabold' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'"
+      >
+        <span>👤 Mi Cuenta</span>
+        <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-blue-900 text-blue-200 font-mono">Cliente</span>
+      </button>
     </nav>
 
     <!-- Acciones de Cabecera: Selector de Tema y Botón de Usuario -->
@@ -97,12 +109,12 @@
 
       <!-- Estado Autenticado -->
       <div *ngIf="authService.estaAutenticado()" class="flex items-center space-x-3">
-        <div class="hidden sm:flex flex-col text-right">
+        <div (click)="irAMiCuenta()" class="hidden sm:flex flex-col text-right cursor-pointer hover:opacity-80 transition-opacity" title="Ir a Mi Cuenta">
           <span class="text-xs font-bold text-slate-800 dark:text-slate-100">
             {{ authService.usuarioActual()?.nombre }}
           </span>
           <span class="text-[10px] text-transorense-verde font-semibold capitalize">
-            {{ authService.usuarioActual()?.roles?.[0] }}
+            {{ authService.usuarioActual()?.roles?.[0] }} • Mi Cuenta ➔
           </span>
         </div>
         <button
@@ -176,6 +188,9 @@
 
   <!-- MÓDULO 4: PANEL DE OPERADOR DE ENCOMIENDAS (CARD-23) -->
   <app-panel-operador-encomiendas *ngIf="moduloActivo() === 'operador_encomiendas'"></app-panel-operador-encomiendas>
+
+  <!-- MÓDULO 5: PANEL PRIVADO DEL CLIENTE - MI CUENTA (CARD-25) -->
+  <app-mi-cuenta *ngIf="moduloActivo() === 'mi_cuenta'"></app-mi-cuenta>
 
   <router-outlet></router-outlet>
 </main>
