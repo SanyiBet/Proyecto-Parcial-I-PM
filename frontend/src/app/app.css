@@ -1,0 +1,24 @@
+/* ==========================================================================
+   TRANSORENSE - ESTILOS ESPECÍFICOS DE LA APLICACIÓN Y NAVEGACIÓN MÓVIL (CARD-34)
+   ========================================================================== */
+
+/* Soporte de área segura inferior para iPhone y Android modernos */
+.safe-area-bottom {
+  padding-bottom: calc(0.375rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Micro-animación para el menú desplegable móvil táctil */
+@keyframes slideUpTouch {
+  from {
+    transform: translateY(100%);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up-touch {
+  animation: slideUpTouch 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
