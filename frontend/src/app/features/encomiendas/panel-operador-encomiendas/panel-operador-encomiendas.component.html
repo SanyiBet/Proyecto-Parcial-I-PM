@@ -419,9 +419,10 @@
         </div>
       </div>
 
-      <!-- Tabla de Encomiendas -->
+      <!-- Tabla / Tarjetas Híbridas de Encomiendas (CARD-36) -->
       <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div class="overflow-x-auto">
+        <!-- 1. VISTA TABLA PARA ESCRITORIO (hidden lg:block) -->
+        <div class="hidden lg:block overflow-x-auto">
           <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
             <thead class="bg-slate-50 dark:bg-slate-900/60 text-xs uppercase font-bold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
               <tr>
@@ -522,6 +523,105 @@
               }
             </tbody>
           </table>
+        </div>
+
+        <!-- 2. VISTA TARJETAS VERTICALES PARA MÓVILES (block lg:hidden) (CARD-36) -->
+        <div class="block lg:hidden p-3.5 sm:p-5 space-y-4">
+          @for (item of encomiendas(); track item._id) {
+            <div class="bg-slate-50/80 dark:bg-slate-900/50 rounded-2xl p-4 border border-slate-200 dark:border-slate-700/80 shadow-xs space-y-3.5">
+              <!-- Fila 1: Guía y Estado -->
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    <span class="font-mono font-bold text-sm text-slate-900 dark:text-white">
+                      {{ item.codigo_rastreo }}
+                    </span>
+                  </div>
+                  <span class="text-[10px] text-slate-400 font-sans block mt-0.5">
+                    {{ item.creada_en | date:'short' }}
+                  </span>
+                </div>
+                <div>
+                  <span [class]="getBadgeClase(item.estado)" class="px-2.5 py-1 rounded-full text-[11px] font-bold border inline-block shadow-xs">
+                    {{ getBadgeLabel(item.estado) }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Fila 2: Ruta Origen ➔ Destino -->
+              <div class="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 text-xs">
+                <div class="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-100">
+                  <span>{{ item.origen }}</span>
+                  <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                  </svg>
+                  <span>{{ item.destino }}</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-xs font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                    ${{ item.precio_final.toFixed(2) }}
+                  </span>
+                  <span class="text-[10px] text-slate-400 block font-normal">{{ item.peso_kg }} kg</span>
+                </div>
+              </div>
+
+              <!-- Fila 3: Remitente y Destinatario -->
+              <div class="grid grid-cols-2 gap-2 text-[11px] p-2.5 rounded-xl bg-slate-100/60 dark:bg-slate-800/40 text-slate-600 dark:text-slate-300">
+                <div>
+                  <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">Remitente</span>
+                  <strong class="text-slate-800 dark:text-slate-100 truncate block">{{ item.remitente.nombre }}</strong>
+                  <span class="text-slate-400 font-mono text-[10px]">CI: {{ item.remitente.cedula }}</span>
+                </div>
+                <div>
+                  <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">Destinatario</span>
+                  <strong class="text-slate-800 dark:text-slate-100 truncate block">{{ item.destinatario.nombre }}</strong>
+                  <span class="text-slate-400 font-mono text-[10px]">CI: {{ item.destinatario.cedula }}</span>
+                </div>
+              </div>
+
+              <!-- Fila 4: Botones Táctiles Accesibles -->
+              <div class="grid grid-cols-3 gap-2 pt-1">
+                <button
+                  type="button"
+                  (click)="abrirModalMovimiento(item)"
+                  class="py-2 px-2 rounded-xl bg-blue-50 dark:bg-blue-900/40 hover:bg-blue-100 text-blue-700 dark:text-blue-300 text-xs font-bold flex items-center justify-center gap-1 active:scale-95 transition-all shadow-xs"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                  <span>Mover</span>
+                </button>
+
+                <button
+                  type="button"
+                  (click)="verHistorial(item)"
+                  class="py-2 px-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center justify-center gap-1 active:scale-95 transition-all shadow-xs"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <span>Historial</span>
+                </button>
+
+                <button
+                  type="button"
+                  (click)="verGuia(item)"
+                  class="py-2 px-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center justify-center gap-1 active:scale-95 transition-all shadow-xs"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                  </svg>
+                  <span>Etiqueta</span>
+                </button>
+              </div>
+            </div>
+          } @empty {
+            <div class="py-12 text-center text-slate-400">
+              <span class="text-3xl block mb-2">📦</span>
+              <p class="font-medium text-xs">No se encontraron encomiendas con los filtros seleccionados.</p>
+            </div>
+          }
         </div>
       </div>
     </div>
