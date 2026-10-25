@@ -6,8 +6,17 @@
 
 const jwt = require("jsonwebtoken");
 
-const JWT_SECRET = process.env.JWT_SECRET || "transorense_jwt_secret_dev_2026_super_seguro";
+let JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "24h";
+
+if (!JWT_SECRET) {
+  if (process.env.NODE_ENV === "test") {
+    JWT_SECRET = "transorense_ci_ephemeral_jwt_secret_key_2026";
+    process.env.JWT_SECRET = JWT_SECRET;
+  } else {
+    throw new Error("❌ Error Crítico de Seguridad (CARD-30): La variable JWT_SECRET es obligatoria y debe definirse en .env");
+  }
+}
 
 /**
  * Genera un token JWT firmado para la sesión de un usuario de TransOrense.

@@ -8,9 +8,21 @@ const { Redis } = require('@upstash/redis');
  * ====================================================================
  */
 
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+if (!redisUrl || !redisToken) {
+  if (process.env.NODE_ENV === 'test') {
+    process.env.UPSTASH_REDIS_REST_URL = process.env.UPSTASH_REDIS_REST_URL || 'https://mock-redis.upstash.io';
+    process.env.UPSTASH_REDIS_REST_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || 'mock_token_for_ci';
+  } else {
+    throw new Error('❌ Error Crítico de Seguridad (CARD-30): UPSTASH_REDIS_REST_URL y UPSTASH_REDIS_REST_TOKEN son obligatorios y deben definirse en .env');
+  }
+}
+
 const redis = new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL || 'https://open-newt-142623.upstash.io',
-    token: process.env.UPSTASH_REDIS_REST_TOKEN || 'gQAAAAAAAi0fAAIgcDExYjNmOWQ4NzVlNzE0ZmNhOWEyNzJiZDU3MTEzYWYzYw',
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
 /**
