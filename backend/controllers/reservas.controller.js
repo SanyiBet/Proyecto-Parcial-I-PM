@@ -92,7 +92,6 @@ async function crearReservaTemporal(req, res, next) {
     }
 
     // 3. Crear documentos en Atlas cumpliendo $jsonSchema (1 documento por asiento reservado)
-    const ahora = new Date();
     const venceEn = new Date(ahora.getTime() + TTL_RESERVA_SEGUNDOS * 1000);
 
     const documentosReserva = asientosStrings.map((numStr) => ({
