@@ -8,6 +8,7 @@ const { Int32 } = require("mongodb");
 const { obtenerDB } = require("../database/connection");
 const { generarUUIDv7 } = require("../database/uuid-helper");
 const { registrarAuditoria } = require("../services/auditoria.service");
+const { escapeRegex } = require("../utils/sanitizer");
 
 /**
  * GET /api/admin/metricas
@@ -72,7 +73,7 @@ async function listarUsuarios(req, res, next) {
     const filtro = {};
 
     if (busqueda && busqueda.trim()) {
-      const q = busqueda.trim();
+      const q = escapeRegex(busqueda.trim());
       filtro.$or = [
         { nombre: { $regex: q, $options: "i" } },
         { correo: { $regex: q, $options: "i" } },
