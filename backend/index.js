@@ -46,6 +46,7 @@ const pasajerosRoutes = require("./routes/pasajeros.routes");
 const pagosRoutes = require("./routes/pagos.routes");
 const encomiendasRoutes = require("./routes/encomiendas.routes");
 const auditoriaRoutes = require("./routes/auditoria.routes");
+const adminRoutes = require("./routes/admin.routes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/viajes", viajesRoutes);
@@ -54,6 +55,7 @@ app.use("/api/pasajeros", pasajerosRoutes);
 app.use("/api/pagos", pagosRoutes);
 app.use("/api/encomiendas", encomiendasRoutes);
 app.use("/api/auditoria", auditoriaRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Manejo centralizado de rutas no encontradas (404)
 app.use((req, res) => {
