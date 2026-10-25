@@ -45,11 +45,15 @@ async function crearReservaTemporal(req, res, next) {
       });
     }
 
-    // 1. Verificar si están ocupados en Atlas
+    // 1. Verificar si están ocupados en Atlas (CARD-29: ignorar reservas temporales expiradas con vence_en <= ahora)
+    const ahora = new Date();
     const ocupadosAtlas = await db.collection("reservas").find({
       viaje_id,
       asiento_numero: { $in: asientosStrings },
-      estado: { $in: ["reservada", "pendiente_verificacion", "confirmada"] },
+      $or: [
+        { estado: { $in: ["pendiente_verificacion", "confirmada"] } },
+        { estado: "reservada", vence_en: { $gt: ahora } },
+      ],
     }).toArray();
 
     if (ocupadosAtlas.length > 0) {
@@ -58,6 +62,17 @@ async function crearReservaTemporal(req, res, next) {
         mensaje: `El asiento #${ocupadosAtlas[0].asiento_numero} ya se encuentra reservado`,
       });
     }
+
+    // Limpieza oportunista: marcar reservas vencidas de estos asientos como expiradas para liberar índice uq_asiento_reserva_activa
+    await db.collection("reservas").updateMany(
+      {
+        viaje_id,
+        asiento_numero: { $in: asientosStrings },
+        estado: "reservada",
+        vence_en: { $lte: ahora },
+      },
+      { $set: { estado: "expirada", actualizada_en: ahora } }
+    );
 
     // 2. Bloqueo atómico en Upstash Redis (NX: Atomic Set-if-Not-Exists)
     const bloqueadosRedis = [];
@@ -77,7 +92,6 @@ async function crearReservaTemporal(req, res, next) {
     }
 
     // 3. Crear documentos en Atlas cumpliendo $jsonSchema (1 documento por asiento reservado)
-    const ahora = new Date();
     const venceEn = new Date(ahora.getTime() + TTL_RESERVA_SEGUNDOS * 1000);
 
     const documentosReserva = asientosStrings.map((numStr) => ({
