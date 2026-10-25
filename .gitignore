@@ -36,8 +36,3 @@ backend/uploads/comprobantes/*
 Thumbs.db
 .vscode/
 .idea/
-
-# Documentos y notas locales de trabajo personal (NO subir a GitHub)
-ACTIVIDADES_KANBAN_TRANSORENSE.txt
-CONTEXTO_ESTADO_ACTUAL.md
-REGLA DE ORO Y RESTRICCIÓN PRINCIPA.txt

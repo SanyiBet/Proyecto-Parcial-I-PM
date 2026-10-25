@@ -102,7 +102,15 @@ function generarCodigoRastreo() {
  */
 async function cotizarEncomienda(req, res, next) {
   try {
-    const { origen, destino, peso_kg, dimensiones, largo_cm, ancho_cm, alto_cm } = req.body;
+    const {
+      origen,
+      destino,
+      peso_kg,
+      dimensiones,
+      largo_cm,
+      ancho_cm,
+      alto_cm,
+    } = req.body;
 
     if (!origen || !destino) {
       return res.status(400).json({
@@ -118,7 +126,8 @@ async function cotizarEncomienda(req, res, next) {
     if (!peso_kg || !largo || !ancho || !alto) {
       return res.status(400).json({
         error: "Parámetros inválidos",
-        mensaje: "Debe proporcionar peso_kg, largo_cm, ancho_cm y alto_cm mayores a 0",
+        mensaje:
+          "Debe proporcionar peso_kg, largo_cm, ancho_cm y alto_cm mayores a 0",
       });
     }
 
@@ -184,7 +193,12 @@ async function registrarEncomienda(req, res, next) {
     } = req.body;
 
     // 1. Validar remitente
-    if (!remitente || !remitente.nombre || !remitente.cedula || !remitente.telefono) {
+    if (
+      !remitente ||
+      !remitente.nombre ||
+      !remitente.cedula ||
+      !remitente.telefono
+    ) {
       return res.status(400).json({
         error: "Datos del remitente incompletos",
         mensaje: "El remitente debe incluir nombre, cedula y telefono",
@@ -200,7 +214,12 @@ async function registrarEncomienda(req, res, next) {
     }
 
     // 2. Validar destinatario
-    if (!destinatario || !destinatario.nombre || !destinatario.cedula || !destinatario.telefono) {
+    if (
+      !destinatario ||
+      !destinatario.nombre ||
+      !destinatario.cedula ||
+      !destinatario.telefono
+    ) {
       return res.status(400).json({
         error: "Datos del destinatario incompletos",
         mensaje: "El destinatario debe incluir nombre, cedula y telefono",
@@ -246,11 +265,15 @@ async function registrarEncomienda(req, res, next) {
 
     // 5. Generar código de rastreo garantizando unicidad
     let codigoRastreo = generarCodigoRastreo();
-    let existe = await db.collection("encomiendas").findOne({ codigo_rastreo: codigoRastreo });
+    let existe = await db
+      .collection("encomiendas")
+      .findOne({ codigo_rastreo: codigoRastreo });
     let intentos = 0;
     while (existe && intentos < 5) {
       codigoRastreo = generarCodigoRastreo();
-      existe = await db.collection("encomiendas").findOne({ codigo_rastreo: codigoRastreo });
+      existe = await db
+        .collection("encomiendas")
+        .findOne({ codigo_rastreo: codigoRastreo });
       intentos++;
     }
 
@@ -273,7 +296,9 @@ async function registrarEncomienda(req, res, next) {
       origen: String(origen).trim(),
       destino: String(destino).trim(),
       peso_kg: new Double(pReal),
-      precio_final: new Double(Number(tarifaFinal.toFixed ? tarifaFinal.toFixed(2) : tarifaFinal)),
+      precio_final: new Double(
+        Number(tarifaFinal.toFixed ? tarifaFinal.toFixed(2) : tarifaFinal),
+      ),
       estado: "recibida",
       registrada_por: usuarioOperador,
       creada_en: ahora,
@@ -297,10 +322,9 @@ async function registrarEncomienda(req, res, next) {
 
     // 8. Si venía asociada a una cotización, marcarla como aceptada
     if (cotizacion_id) {
-      await db.collection("cotizaciones_encomienda").updateOne(
-        { _id: cotizacion_id },
-        { $set: { estado: "aceptada" } }
-      );
+      await db
+        .collection("cotizaciones_encomienda")
+        .updateOne({ _id: cotizacion_id }, { $set: { estado: "aceptada" } });
     }
 
     // 9. Auditoría técnica (CARD-24)
@@ -512,7 +536,8 @@ async function registrarMovimientoEncomienda(req, res, next) {
     if (!ubicacion || !ubicacion.trim()) {
       return res.status(400).json({
         error: "Ubicación requerida",
-        mensaje: "Debe indicar la ubicación física actual del paquete (ej: Agencia Guayaquil)",
+        mensaje:
+          "Debe indicar la ubicación física actual del paquete (ej: Agencia Guayaquil)",
       });
     }
 
@@ -543,7 +568,7 @@ async function registrarMovimientoEncomienda(req, res, next) {
           actualizada_en: ahora,
           ...(nuevo_estado === "entregada" ? { entregada_en: ahora } : {}),
         },
-      }
+      },
     );
 
     // 2. Registrar el nuevo hito en 'historial_encomienda'
@@ -552,7 +577,9 @@ async function registrarMovimientoEncomienda(req, res, next) {
       encomienda_id: encomienda._id,
       estado: nuevo_estado,
       ubicacion: String(ubicacion).trim(),
-      observacion: observacion ? String(observacion).trim() : `Actualización a estado: ${nuevo_estado}`,
+      observacion: observacion
+        ? String(observacion).trim()
+        : `Actualización a estado: ${nuevo_estado}`,
       usuario_id: usuarioOperador,
       fecha: ahora,
     };
@@ -596,4 +623,3 @@ module.exports = {
   rastrearEncomiendaPublico,
   registrarMovimientoEncomienda,
 };
-

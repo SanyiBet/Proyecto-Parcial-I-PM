@@ -12,6 +12,7 @@ const {
   cachearViajes,
   obtenerAsientosBloqueados,
 } = require("../database/redis");
+const { escapeRegex } = require("../utils/sanitizer");
 
 /**
  * Sembrador de datos iniciales en MongoDB Atlas
@@ -179,8 +180,8 @@ async function buscarViajes(req, res, next) {
       { $unwind: "$bus" },
       {
         $match: {
-          "ruta.origen": { $regex: new RegExp(`^${origen}$`, "i") },
-          "ruta.destino": { $regex: new RegExp(`^${destino}$`, "i") },
+          "ruta.origen": { $regex: new RegExp(`^${escapeRegex(origen)}$`, "i") },
+          "ruta.destino": { $regex: new RegExp(`^${escapeRegex(destino)}$`, "i") },
           estado: "programado",
         },
       },
