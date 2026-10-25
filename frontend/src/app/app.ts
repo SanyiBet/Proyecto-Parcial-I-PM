@@ -14,6 +14,8 @@ import { EncomiendasPublicoComponent } from './features/encomiendas/encomiendas-
 import { PanelOperadorEncomiendasComponent } from './features/encomiendas/panel-operador-encomiendas/panel-operador-encomiendas.component';
 import { AdminDashboardComponent } from './features/admin/dashboard/admin-dashboard.component';
 import { PanelAuditoriaComponent } from './features/auditoria/panel-auditoria/panel-auditoria.component';
+import { TicketDigitalComponent } from './shared/components/ticket-digital/ticket-digital.component';
+import { TicketService } from './core/services/ticket.service';
 import { Viaje } from './core/models/viajes.models';
 
 @Component({
@@ -32,6 +34,7 @@ import { Viaje } from './core/models/viajes.models';
     PanelOperadorEncomiendasComponent,
     AdminDashboardComponent,
     PanelAuditoriaComponent,
+    TicketDigitalComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -40,6 +43,7 @@ export class App {
   public themeService = inject(ThemeService);
   public sweetAlert = inject(SweetAlertService);
   public authService = inject(AuthService);
+  public ticketService = inject(TicketService);
 
   // Módulo activo en la aplicación ('viajes' | 'boleteria' | 'encomiendas' | 'operador_encomiendas' | 'admin' | 'auditoria')
   public moduloActivo = signal<'viajes' | 'boleteria' | 'encomiendas' | 'operador_encomiendas' | 'admin' | 'auditoria'>('viajes');
