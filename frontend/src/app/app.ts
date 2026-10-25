@@ -71,6 +71,9 @@ export class App {
   // Control de modal de autenticación (CARD-12)
   public mostrarModalAuth = signal<boolean>(false);
 
+  // Control de Menú Móvil Táctil Desplegable (CARD-34)
+  public menuMovilAbierto = signal<boolean>(false);
+
   // Flujo de compra, asientos y pagos (CARD-15, CARD-16 y CARD-18)
   public viajeActivo = signal<Viaje | null>(null);
   public reservaParaPago = signal<{
@@ -84,7 +87,16 @@ export class App {
     this.themeService.toggleTheme();
   }
 
+  public alternarMenuMovil(): void {
+    this.menuMovilAbierto.update((v) => !v);
+  }
+
+  public cerrarMenuMovil(): void {
+    this.menuMovilAbierto.set(false);
+  }
+
   public abrirModalAuth(): void {
+    this.cerrarMenuMovil();
     this.mostrarModalAuth.set(true);
   }
 
@@ -97,6 +109,7 @@ export class App {
   }
 
   public cerrarSesion(): void {
+    this.cerrarMenuMovil();
     this.authService.cerrarSesion();
     this.sweetAlert.toast('info', 'Has cerrado sesión exitosamente.');
   }
@@ -107,32 +120,39 @@ export class App {
   }
 
   public onVolverABuscador(): void {
+    this.cerrarMenuMovil();
     this.moduloActivo.set('viajes');
     this.viajeActivo.set(null);
     this.reservaParaPago.set(null);
   }
 
   public irAViajes(): void {
+    this.cerrarMenuMovil();
     this.moduloActivo.set('viajes');
   }
 
   public irAEncomiendas(): void {
+    this.cerrarMenuMovil();
     this.moduloActivo.set('encomiendas');
   }
 
   public irABoleteria(): void {
+    this.cerrarMenuMovil();
     this.moduloActivo.set('boleteria');
   }
 
   public irAOperadorEncomiendas(): void {
+    this.cerrarMenuMovil();
     this.moduloActivo.set('operador_encomiendas');
   }
 
   public irAAdmin(): void {
+    this.cerrarMenuMovil();
     this.moduloActivo.set('admin');
   }
 
   public irAAuditoria(): void {
+    this.cerrarMenuMovil();
     this.moduloActivo.set('auditoria');
   }
 
