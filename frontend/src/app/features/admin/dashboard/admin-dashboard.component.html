@@ -1,0 +1,636 @@
+<div class="space-y-6">
+  <!-- Encabezado del Panel de Administración -->
+  <div
+    class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+  >
+    <div class="flex items-center space-x-4">
+      <div
+        class="w-12 h-12 rounded-2xl bg-purple-600/10 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300 flex items-center justify-center font-bold text-2xl shadow-inner"
+      ></div>
+      <div>
+        <h1
+          class="text-2xl font-black text-slate-800 dark:text-white font-montserrat flex items-center gap-2"
+        >
+          Panel de Administración
+          <span
+            class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800"
+          >
+            RBAC & Métricas
+          </span>
+        </h1>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          Control directivo de ingresos, recursos logísticos de la flota y asignación de roles del
+          personal.
+        </p>
+      </div>
+    </div>
+
+    <!-- Pestañas de Navegación -->
+    <div
+      class="flex items-center bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 w-full md:w-auto overflow-x-auto"
+    >
+      <button
+        (click)="cambiarPestana('kpis')"
+        class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap"
+        [ngClass]="
+          pestanaActiva() === 'kpis'
+            ? 'bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 shadow-sm'
+            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+        "
+      >
+        <span>📊</span> Métricas Globales
+      </button>
+
+      <button
+        (click)="cambiarPestana('rutas')"
+        class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap"
+        [ngClass]="
+          pestanaActiva() === 'rutas'
+            ? 'bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 shadow-sm'
+            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+        "
+      >
+        <span>🛣️</span> Rutas
+      </button>
+
+      <button
+        (click)="cambiarPestana('buses')"
+        class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap"
+        [ngClass]="
+          pestanaActiva() === 'buses'
+            ? 'bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 shadow-sm'
+            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+        "
+      >
+        <span>🚌</span> Flota Buses
+      </button>
+
+      <button
+        (click)="cambiarPestana('usuarios')"
+        class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap"
+        [ngClass]="
+          pestanaActiva() === 'usuarios'
+            ? 'bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 shadow-sm'
+            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+        "
+      >
+        <span>👥</span> Roles & Usuarios
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="cargando()" class="py-12 text-center">
+    <div
+      class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-purple-500 border-t-transparent mb-2"
+    ></div>
+    <p class="text-sm text-slate-500">Cargando métricas de administración...</p>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- PESTAÑA 1: KPIS Y MÉTRICAS GLOBALES        -->
+  <!-- ========================================== -->
+  <div *ngIf="pestanaActiva() === 'kpis' && !cargando()" class="space-y-6">
+    <!-- Grid de Métricas Principales -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Tarjeta 1: Recaudación Total -->
+      <div
+        class="bg-gradient-to-br from-emerald-500 to-teal-700 rounded-3xl p-5 text-white shadow-lg shadow-emerald-500/10 relative overflow-hidden"
+      >
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-semibold uppercase tracking-wider text-emerald-100"
+            >Recaudación Total</span
+          >
+          <span class="text-2xl">💰</span>
+        </div>
+        <div class="text-3xl font-black font-montserrat">
+          ${{ (kpis()?.recaudacion_total || 0).toFixed(2) }}
+        </div>
+        <div
+          class="mt-2 text-[11px] text-emerald-100 flex items-center justify-between border-t border-emerald-400/30 pt-2"
+        >
+          <span>Pasajes: ${{ (kpis()?.recaudacion_pasajes || 0).toFixed(2) }}</span>
+          <span>Carga: ${{ (kpis()?.recaudacion_encomiendas || 0).toFixed(2) }}</span>
+        </div>
+      </div>
+
+      <!-- Tarjeta 2: Pasajes y Asientos -->
+      <div
+        class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm"
+      >
+        <div class="flex items-center justify-between mb-3 text-slate-500 dark:text-slate-400">
+          <span class="text-xs font-semibold uppercase tracking-wider">Boletos Confirmados</span>
+          <span class="text-2xl">🎟️</span>
+        </div>
+        <div class="text-3xl font-black text-slate-800 dark:text-white font-montserrat">
+          {{ kpis()?.boletos_confirmados || 0 }}
+        </div>
+        <div
+          class="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between border-t border-slate-100 dark:border-slate-700/60 pt-2"
+        >
+          <span class="text-amber-500 font-medium"
+            >⏳ Pendientes: {{ kpis()?.reservas_pendientes || 0 }}</span
+          >
+          <span class="text-transorense-verde font-semibold"
+            >Viajes: {{ kpis()?.viajes_activos || 0 }}</span
+          >
+        </div>
+      </div>
+
+      <!-- Tarjeta 3: Encomiendas -->
+      <div
+        class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm"
+      >
+        <div class="flex items-center justify-between mb-3 text-slate-500 dark:text-slate-400">
+          <span class="text-xs font-semibold uppercase tracking-wider">Guías de Carga</span>
+          <span class="text-2xl">📦</span>
+        </div>
+        <div class="text-3xl font-black text-slate-800 dark:text-white font-montserrat">
+          {{ kpis()?.encomiendas_totales || 0 }}
+        </div>
+        <div
+          class="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between border-t border-slate-100 dark:border-slate-700/60 pt-2"
+        >
+          <span>Ingresos Carga</span>
+          <span class="font-bold text-slate-700 dark:text-slate-200"
+            >${{ (kpis()?.recaudacion_encomiendas || 0).toFixed(2) }}</span
+          >
+        </div>
+      </div>
+
+      <!-- Tarjeta 4: Recursos y Usuarios -->
+      <div
+        class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm"
+      >
+        <div class="flex items-center justify-between mb-3 text-slate-500 dark:text-slate-400">
+          <span class="text-xs font-semibold uppercase tracking-wider">Comunidad TransOrense</span>
+          <span class="text-2xl">👥</span>
+        </div>
+        <div class="text-3xl font-black text-slate-800 dark:text-white font-montserrat">
+          {{ kpis()?.usuarios_registrados || 0 }}
+        </div>
+        <div
+          class="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between border-t border-slate-100 dark:border-slate-700/60 pt-2"
+        >
+          <span>{{ kpis()?.buses_activos || 0 }} Buses activos</span>
+          <span>{{ kpis()?.rutas_activas || 0 }} Rutas</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actividad Reciente / Últimos Pagos -->
+    <div
+      class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm"
+    >
+      <div
+        class="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between"
+      >
+        <h2 class="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
+          <span>💳</span> Últimas Transacciones Registradas
+        </h2>
+        <span class="text-xs text-slate-400">Boletería & Carga en Tiempo Real</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead
+            class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 uppercase font-semibold border-b border-slate-200 dark:border-slate-700"
+          >
+            <tr>
+              <th class="px-5 py-3.5">ID Transacción</th>
+              <th class="px-5 py-3.5">Monto</th>
+              <th class="px-5 py-3.5">Método</th>
+              <th class="px-5 py-3.5">Comprobante</th>
+              <th class="px-5 py-3.5">Estado</th>
+              <th class="px-5 py-3.5">Fecha</th>
+            </tr>
+          </thead>
+          <tbody
+            class="divide-y divide-slate-100 dark:divide-slate-700/50 text-slate-700 dark:text-slate-300"
+          >
+            <tr
+              *ngFor="let p of ultimosPagos()"
+              class="hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors"
+            >
+              <td
+                class="px-5 py-3 font-mono text-[11px] font-bold text-slate-600 dark:text-slate-400"
+              >
+                {{ p._id?.substring(0, 12) }}...
+              </td>
+              <td class="px-5 py-3 font-bold text-slate-900 dark:text-white">
+                ${{ (p.monto || 0).toFixed(2) }}
+              </td>
+              <td class="px-5 py-3 capitalize">
+                <span
+                  class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                >
+                  {{ p.metodo_pago }}
+                </span>
+              </td>
+              <td class="px-5 py-3 font-mono text-[11px]">
+                {{ p.referencia_transferencia || 'N/A' }}
+              </td>
+              <td class="px-5 py-3">
+                <span
+                  class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
+                  [ngClass]="{
+                    'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300':
+                      p.estado === 'aprobado',
+                    'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300':
+                      p.estado === 'pendiente',
+                    'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300':
+                      p.estado === 'rechazado',
+                  }"
+                >
+                  {{ p.estado }}
+                </span>
+              </td>
+              <td class="px-5 py-3 text-slate-400 text-[11px]">
+                {{ p.creado_en | date: 'dd/MM/yyyy HH:mm' }}
+              </td>
+            </tr>
+            <tr *ngIf="ultimosPagos().length === 0">
+              <td colspan="6" class="px-5 py-8 text-center text-slate-400">
+                No hay pagos registrados recientemente.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- PESTAÑA 2: GESTIÓN DE RUTAS                -->
+  <!-- ========================================== -->
+  <div *ngIf="pestanaActiva() === 'rutas'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Formulario Crear Ruta -->
+    <div
+      class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm h-fit"
+    >
+      <h2 class="text-base font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+        <span>➕</span> Nueva Ruta Interprovincial
+      </h2>
+
+      <form (ngSubmit)="crearNuevaRuta()" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1"
+            >Ciudad Origen</label
+          >
+          <select
+            [(ngModel)]="nuevaRuta.origen"
+            name="origen"
+            required
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none"
+          >
+            <option value="" disabled>Seleccione ciudad origen</option>
+            <option *ngFor="let c of ciudades" [value]="c">{{ c }}</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1"
+            >Ciudad Destino</label
+          >
+          <select
+            [(ngModel)]="nuevaRuta.destino"
+            name="destino"
+            required
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none"
+          >
+            <option value="" disabled>Seleccione ciudad destino</option>
+            <option *ngFor="let c of ciudades" [value]="c">{{ c }}</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1"
+            >Duración Estimada (Minutos)</label
+          >
+          <input
+            type="number"
+            [(ngModel)]="nuevaRuta.duracion_minutos"
+            name="duracion_minutos"
+            min="30"
+            max="1440"
+            required
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none"
+          />
+          <p class="text-[10px] text-slate-400 mt-1">Ej: 180 min = 3 horas de viaje.</p>
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="guardandoRuta()"
+          class="w-full py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md shadow-purple-600/20 transition-all disabled:opacity-50"
+        >
+          {{ guardandoRuta() ? 'Registrando Ruta...' : 'Crear Ruta Interprovincial' }}
+        </button>
+      </form>
+    </div>
+
+    <!-- Lista de Rutas -->
+    <div
+      class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm"
+    >
+      <div
+        class="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between"
+      >
+        <h2 class="text-base font-bold text-slate-800 dark:text-white">
+          Catálogo Oficial de Rutas ({{ rutas().length }})
+        </h2>
+        <span class="text-xs text-slate-400">Activa o suspende itinerarios</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead
+            class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 uppercase font-semibold border-b border-slate-200 dark:border-slate-700"
+          >
+            <tr>
+              <th class="px-5 py-3.5">Origen - Destino</th>
+              <th class="px-5 py-3.5">Duración</th>
+              <th class="px-5 py-3.5">Estado</th>
+              <th class="px-5 py-3.5 text-right">Acción</th>
+            </tr>
+          </thead>
+          <tbody
+            class="divide-y divide-slate-100 dark:divide-slate-700/50 text-slate-700 dark:text-slate-300"
+          >
+            <tr
+              *ngFor="let r of rutas()"
+              class="hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors"
+            >
+              <td
+                class="px-5 py-3 font-bold text-slate-900 dark:text-white flex items-center gap-2"
+              >
+                <span>{{ r.origen }}</span>
+                <span class="text-slate-400">➔</span>
+                <span>{{ r.destino }}</span>
+              </td>
+              <td class="px-5 py-3 text-slate-600 dark:text-slate-400">
+                {{ r.duracion_minutos }} min ({{ (r.duracion_minutos / 60).toFixed(1) }} hrs)
+              </td>
+              <td class="px-5 py-3">
+                <span
+                  class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
+                  [ngClass]="
+                    r.estado === 'activo'
+                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                      : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                  "
+                >
+                  {{ r.estado }}
+                </span>
+              </td>
+              <td class="px-5 py-3 text-right">
+                <button
+                  (click)="alternarRuta(r)"
+                  class="px-3 py-1 rounded-lg text-[11px] font-semibold border transition-colors"
+                  [ngClass]="
+                    r.estado === 'activo'
+                      ? 'border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-400'
+                      : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400'
+                  "
+                >
+                  {{ r.estado === 'activo' ? 'Desactivar' : 'Activar' }}
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="rutas().length === 0">
+              <td colspan="4" class="px-5 py-8 text-center text-slate-400">
+                No hay rutas registradas en el catálogo.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- PESTAÑA 3: GESTIÓN DE FLOTA DE BUSES       -->
+  <!-- ========================================== -->
+  <div *ngIf="pestanaActiva() === 'buses'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Formulario Registrar Bus -->
+    <div
+      class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm h-fit"
+    >
+      <h2 class="text-base font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+        <span>➕</span> Registrar Unidad de Bus
+      </h2>
+
+      <form (ngSubmit)="crearNuevoBus()" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1"
+            >Placa Vehicular</label
+          >
+          <input
+            type="text"
+            [(ngModel)]="nuevoBus.placa"
+            name="placa"
+            placeholder="Ej: OBA-1234"
+            required
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-xs uppercase font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none"
+          />
+          <p class="text-[10px] text-slate-400 mt-1">Formato oficial ecuatoriano: AAA-1234.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1"
+            >Modelo / Descripción</label
+          >
+          <input
+            type="text"
+            [(ngModel)]="nuevoBus.descripcion"
+            name="descripcion"
+            placeholder="Ej: Scania K410 Doble Piso Confort"
+            required
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1"
+            >Capacidad Estándar</label
+          >
+          <input
+            type="number"
+            [value]="40"
+            disabled
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-mono"
+          />
+          <p class="text-[10px] text-slate-400 mt-1">
+            Matriz automatizada de 40 asientos (10 filas x 4 columnas).
+          </p>
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="guardandoBus()"
+          class="w-full py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md shadow-purple-600/20 transition-all disabled:opacity-50"
+        >
+          {{ guardandoBus() ? 'Guardando...' : 'Registrar Unidad en Flota' }}
+        </button>
+      </form>
+    </div>
+
+    <!-- Lista de Buses Registrados -->
+    <div class="lg:col-span-2 space-y-4">
+      <div
+        class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between"
+      >
+        <div>
+          <h2 class="text-base font-bold text-slate-800 dark:text-white">
+            Flota TransOrense ({{ buses().length }} Unidades)
+          </h2>
+          <p class="text-xs text-slate-400">
+            Unidades equipadas con geolocalización y aire acondicionado
+          </p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div
+          *ngFor="let b of buses()"
+          class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between"
+        >
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span
+                class="font-mono font-black text-sm px-2.5 py-1 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800"
+              >
+                {{ b.placa }}
+              </span>
+              <span
+                class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
+              >
+                {{ b.estado }}
+              </span>
+            </div>
+            <h3 class="font-bold text-slate-800 dark:text-white text-xs mb-1">
+              {{ b.descripcion }}
+            </h3>
+            <p class="text-[11px] text-slate-400">
+              Distribución: 10 filas × 4 columnas (Pasillo central)
+            </p>
+          </div>
+
+          <div
+            class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between text-xs"
+          >
+            <span class="text-slate-500 font-semibold">Capacidad:</span>
+            <span class="font-black text-transorense-verde font-mono"
+              >{{ b.capacidad }} Pasajeros</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div
+        *ngIf="buses().length === 0"
+        class="p-8 text-center bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 text-slate-400 text-xs"
+      >
+        No hay unidades registradas en la flota.
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- PESTAÑA 4: USUARIOS Y ASIGNACIÓN DE ROLES  -->
+  <!-- ========================================== -->
+  <div
+    *ngIf="pestanaActiva() === 'usuarios'"
+    class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm"
+  >
+    <div
+      class="p-5 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+    >
+      <div>
+        <h2 class="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
+          <span>👥</span> Control de Acceso Basado en Roles (RBAC)
+        </h2>
+        <p class="text-xs text-slate-400">
+          Modifica los privilegios del personal (Agente Boletería, Operador Carga, Auditor o
+          Administrador)
+        </p>
+      </div>
+
+      <!-- Buscador de Usuarios -->
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <input
+          type="text"
+          [(ngModel)]="busquedaUsuario"
+          (keyup.enter)="buscarUsuarios()"
+          placeholder="Buscar por nombre, correo o cédula..."
+          class="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white text-xs w-full sm:w-64 focus:ring-2 focus:ring-purple-500 focus:outline-none"
+        />
+        <button
+          (click)="buscarUsuarios()"
+          class="px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs"
+        >
+          Buscar
+        </button>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead
+          class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 uppercase font-semibold border-b border-slate-200 dark:border-slate-700"
+        >
+          <tr>
+            <th class="px-5 py-3.5">Usuario</th>
+            <th class="px-5 py-3.5">Cédula</th>
+            <th class="px-5 py-3.5">Método Auth</th>
+            <th class="px-5 py-3.5">Rol Actual / Asignar Privilegio</th>
+            <th class="px-5 py-3.5">Fecha Registro</th>
+          </tr>
+        </thead>
+        <tbody
+          class="divide-y divide-slate-100 dark:divide-slate-700/50 text-slate-700 dark:text-slate-300"
+        >
+          <tr
+            *ngFor="let u of usuarios()"
+            class="hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors"
+          >
+            <td class="px-5 py-3.5">
+              <div class="font-bold text-slate-900 dark:text-white">{{ u.nombre }}</div>
+              <div class="text-[11px] text-slate-400 font-mono">{{ u.correo }}</div>
+            </td>
+            <td class="px-5 py-3.5 font-mono text-[11px]">
+              {{ u.cedula || 'Sin vincular' }}
+            </td>
+            <td class="px-5 py-3.5">
+              <span
+                class="px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+              >
+                {{ u.metodo_auth }}
+              </span>
+            </td>
+            <td class="px-5 py-3.5">
+              <!-- Selector RBAC para cambio de rol en caliente -->
+              <select
+                [value]="u.roles[0] || 'cliente'"
+                (change)="onCambioRol(u, $event)"
+                class="px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-purple-500 focus:outline-none"
+              >
+                <option *ngFor="let r of rolesDisponibles" [value]="r.id">
+                  {{ r.label }}
+                </option>
+              </select>
+            </td>
+            <td class="px-5 py-3.5 text-slate-400 text-[11px]">
+              {{ u.creado_en | date: 'dd/MM/yyyy' }}
+            </td>
+          </tr>
+          <tr *ngIf="usuarios().length === 0">
+            <td colspan="5" class="px-5 py-8 text-center text-slate-400">
+              No se encontraron usuarios que coincidan con la búsqueda.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

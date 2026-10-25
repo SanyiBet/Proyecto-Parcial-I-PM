@@ -12,6 +12,7 @@ import { FormularioPagoComponent } from './features/viajes/formulario-pago/formu
 import { PanelBoleteriaComponent } from './features/boleteria/panel-boleteria/panel-boleteria.component';
 import { EncomiendasPublicoComponent } from './features/encomiendas/encomiendas-publico/encomiendas-publico.component';
 import { PanelOperadorEncomiendasComponent } from './features/encomiendas/panel-operador-encomiendas/panel-operador-encomiendas.component';
+import { AdminDashboardComponent } from './features/admin/dashboard/admin-dashboard.component';
 import { Viaje } from './core/models/viajes.models';
 
 @Component({
@@ -28,6 +29,7 @@ import { Viaje } from './core/models/viajes.models';
     PanelBoleteriaComponent,
     EncomiendasPublicoComponent,
     PanelOperadorEncomiendasComponent,
+    AdminDashboardComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -37,8 +39,8 @@ export class App {
   public sweetAlert = inject(SweetAlertService);
   public authService = inject(AuthService);
 
-  // Módulo activo en la aplicación ('viajes' | 'boleteria' | 'encomiendas' | 'operador_encomiendas')
-  public moduloActivo = signal<'viajes' | 'boleteria' | 'encomiendas' | 'operador_encomiendas'>('viajes');
+  // Módulo activo en la aplicación ('viajes' | 'boleteria' | 'encomiendas' | 'operador_encomiendas' | 'admin')
+  public moduloActivo = signal<'viajes' | 'boleteria' | 'encomiendas' | 'operador_encomiendas' | 'admin'>('viajes');
 
   // Control de permisos para Agente de Boletería y Administrador (CARD-19)
   public puedeAccederBoleteria = computed(() => {
@@ -50,6 +52,12 @@ export class App {
   public puedeAccederOperadorEncomiendas = computed(() => {
     const roles = this.authService.usuarioActual()?.roles || [];
     return roles.includes('administrador') || roles.includes('operador_encomiendas');
+  });
+
+  // Control de permisos para Administrador Directivo (CARD-26)
+  public puedeAccederAdmin = computed(() => {
+    const roles = this.authService.usuarioActual()?.roles || [];
+    return roles.includes('administrador');
   });
 
   // Control de modal de autenticación (CARD-12)
@@ -110,6 +118,10 @@ export class App {
 
   public irAOperadorEncomiendas(): void {
     this.moduloActivo.set('operador_encomiendas');
+  }
+
+  public irAAdmin(): void {
+    this.moduloActivo.set('admin');
   }
 
   public onReservaConfirmada(evento: {
