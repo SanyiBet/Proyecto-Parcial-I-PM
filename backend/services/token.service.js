@@ -4,6 +4,7 @@
  * Maneja el payload RBAC con identificador UUID v7, correo y roles asignados.
  */
 
+require("dotenv").config();
 const jwt = require("jsonwebtoken");
 
 let JWT_SECRET = process.env.JWT_SECRET;

@@ -10,6 +10,8 @@ const path = require("path");
 const { Double } = require("mongodb");
 const { obtenerDB } = require("../database/connection");
 const { generarUUIDv7 } = require("../database/uuid-helper");
+const { validarArchivoComprobante } = require("../utils/file-validator");
+const { escapeRegex } = require("../utils/sanitizer");
 
 // Directorio seguro de comprobantes en almacenamiento local
 const RUTA_UPLOADS = path.join(__dirname, "..", "uploads", "comprobantes");
@@ -18,36 +20,34 @@ if (!fs.existsSync(RUTA_UPLOADS)) {
 }
 
 /**
- * Guarda una imagen o PDF en base64 en el almacenamiento local seguro
+ * Guarda una imagen o PDF en base64 en el almacenamiento local seguro tras validar firma binaria (CARD-32)
  * @param {string} base64Data
- * @param {string} nombreOriginal
  * @returns {string} URL relativa del comprobante guardado
  */
-function guardarComprobanteEnDisco(base64Data, nombreOriginal = "comprobante.jpg") {
+function guardarComprobanteEnDisco(base64Data) {
   let cleanBase64 = base64Data;
-  let extension = ".jpg";
 
   // Detección de Data URI (ej: data:image/png;base64,...)
   const match = base64Data.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
   if (match) {
-    const mime = match[1];
     cleanBase64 = match[2];
-    if (mime.includes("png")) extension = ".png";
-    else if (mime.includes("pdf")) extension = ".pdf";
-    else if (mime.includes("webp")) extension = ".webp";
-    else if (mime.includes("jpeg") || mime.includes("jpg")) extension = ".jpg";
-  } else {
-    const extMatch = path.extname(nombreOriginal);
-    if (extMatch) extension = extMatch.toLowerCase();
   }
 
-  const nombreArchivo = `comprobante-${generarUUIDv7()}${extension}`;
+  const buffer = Buffer.from(cleanBase64, "base64");
+  const validacion = validarArchivoComprobante(buffer);
+  if (!validacion.esValido) {
+    const err = new Error(validacion.error);
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // Prevención de Path Traversal: Usar exclusivamente UUIDv7 para el nombre de archivo
+  const nombreArchivo = `comprobante-${generarUUIDv7()}${validacion.extension}`;
   const rutaCompleta = path.join(RUTA_UPLOADS, nombreArchivo);
 
-  const buffer = Buffer.from(cleanBase64, "base64");
   fs.writeFileSync(rutaCompleta, buffer);
 
-  return `/uploads/comprobantes/${nombreArchivo}`;
+  return `/api/pagos/comprobante/${nombreArchivo}`;
 }
 
 /**
@@ -132,10 +132,17 @@ async function registrarPago(req, res, next) {
       }
     }
 
-    // 2. Procesar y guardar el comprobante si se adjuntó
+    // 2. Procesar y guardar el comprobante si se adjuntó (con validación binaria CARD-32)
     let comprobanteUrl = null;
     if (comprobante_base64) {
-      comprobanteUrl = guardarComprobanteEnDisco(comprobante_base64, comprobante_nombre);
+      try {
+        comprobanteUrl = guardarComprobanteEnDisco(comprobante_base64);
+      } catch (errArchivo) {
+        return res.status(400).json({
+          error: "Comprobante inválido",
+          mensaje: errArchivo.message,
+        });
+      }
     }
 
     // 3. Calcular importe total si no viene explícito
@@ -401,10 +408,54 @@ async function rechazarPago(req, res, next) {
   }
 }
 
+/**
+ * GET /api/pagos/comprobante/:nombreArchivo
+ * Visualización protegida de comprobante bancario bajo LOPDP (CARD-32).
+ * Exige sesión activa y pertenencia al usuario o rol autorizado (agente/admin).
+ */
+async function verComprobanteProtegido(req, res, next) {
+  try {
+    const usuarioId = req.usuario?.sub;
+    const roles = req.usuario?.roles || [];
+    const esPersonalAutorizado = roles.includes("administrador") || roles.includes("agente_boleteria");
+
+    const { nombreArchivo } = req.params;
+    if (!nombreArchivo) {
+      return res.status(400).json({ error: "Nombre de archivo no especificado" });
+    }
+
+    // Prevención estricta de Path Traversal
+    const nombreSeguro = path.basename(nombreArchivo);
+    const rutaArchivo = path.join(RUTA_UPLOADS, nombreSeguro);
+
+    if (!fs.existsSync(rutaArchivo)) {
+      return res.status(404).json({ error: "Comprobante no encontrado", mensaje: "El archivo solicitado no existe" });
+    }
+
+    const db = obtenerDB();
+    const pago = await db.collection("pagos").findOne({
+      comprobante_url: { $regex: escapeRegex(nombreSeguro) },
+    });
+
+    if (pago && !esPersonalAutorizado && pago.usuario_id !== usuarioId) {
+      return res.status(403).json({
+        error: "Acceso denegado (Protección LOPDP)",
+        mensaje: "No tiene autorización para visualizar este comprobante bancario",
+      });
+    }
+
+    return res.sendFile(rutaArchivo);
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   registrarPago,
   obtenerPagoPorReserva,
   listarPagosPendientes,
   aprobarPago,
   rechazarPago,
+  verComprobanteProtegido,
+  guardarComprobanteEnDisco,
 };
