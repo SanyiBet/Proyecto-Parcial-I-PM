@@ -59,3 +59,8 @@ jobs:
         run: |
           cd backend
           npm test
+
+      - name: Ejecutar suite de pruebas de integración End-to-End (E2E - CARD-28)
+        run: |
+          cd backend
+          npm run test:e2e
