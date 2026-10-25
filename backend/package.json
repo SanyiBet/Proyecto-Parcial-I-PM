@@ -20,7 +20,8 @@
     "test:card29": "node tests/test-card29.js",
     "test:card31": "node tests/test-card31.js",
     "test:card32": "node tests/test-card32.js",
-    "test": "node tests/test-card06.js && node tests/test-card07.js && node tests/test-card08-09.js && node tests/test-card17.js && node tests/test-card19.js && node tests/test-card20.js && node tests/test-card21.js && node tests/test-auditoria-incidencias.js && node tests/test-e2e.js && node tests/test-card29.js && node tests/test-card31.js && node tests/test-card32.js"
+    "test:card33": "node tests/test-card33.js",
+    "test": "node tests/test-card06.js && node tests/test-card07.js && node tests/test-card08-09.js && node tests/test-card17.js && node tests/test-card19.js && node tests/test-card20.js && node tests/test-card21.js && node tests/test-auditoria-incidencias.js && node tests/test-e2e.js && node tests/test-card29.js && node tests/test-card31.js && node tests/test-card32.js && node tests/test-card33.js"
   },
   "keywords": [],
   "author": "",
@@ -32,6 +33,7 @@
     "cors": "^2.8.6",
     "dotenv": "^16.4.5",
     "express": "^5.3.0",
+    "express-rate-limit": "^8.7.1",
     "google-auth-library": "^11.3.1",
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^6.10.0",
