@@ -175,8 +175,79 @@ async function cancelarReserva(req, res, next) {
   }
 }
 
+/**
+ * GET /api/reservas/mis-reservas
+ * Devuelve el historial de reservas/boletos del cliente autenticado con datos del viaje, ruta y pago
+ */
+async function obtenerMisReservas(req, res, next) {
+  try {
+    const usuarioId = req.usuario?.sub;
+    if (!usuarioId) {
+      return res.status(401).json({ error: "No autenticado" });
+    }
+
+    const db = obtenerDB();
+    const reservas = await db
+      .collection("reservas")
+      .find({ usuario_id: usuarioId })
+      .sort({ creada_en: -1 })
+      .toArray();
+
+    const resultado = [];
+    for (const r of reservas) {
+      const viaje = await db.collection("viajes").findOne({ _id: r.viaje_id });
+      let ruta = null;
+      let bus = null;
+      if (viaje) {
+        ruta = await db.collection("rutas").findOne({ _id: viaje.ruta_id });
+        bus = await db.collection("buses").findOne({ _id: viaje.bus_id });
+      }
+
+      const pasajero = await db.collection("pasajeros").findOne({ reserva_id: r._id });
+      const pago = await db.collection("pagos").findOne({
+        $or: [{ reserva_id: r._id }, { reservas_asociadas: r._id }],
+      });
+
+      resultado.push({
+        _id: r._id,
+        asiento_numero: r.asiento_numero,
+        precio_final: Number(r.precio_final || 0),
+        estado: r.estado,
+        creada_en: r.creada_en,
+        vence_en: r.vence_en,
+        viaje: viaje
+          ? {
+              _id: viaje._id,
+              salida: viaje.salida,
+              llegada_estimada: viaje.llegada_estimada,
+              ruta: ruta ? { origen: ruta.origen, destino: ruta.destino } : null,
+              bus: bus ? { placa: bus.placa, descripcion: bus.descripcion } : null,
+            }
+          : null,
+        pasajero: pasajero ? { nombre: pasajero.nombre, identificacion: pasajero.identificacion } : null,
+        pago: pago
+          ? {
+              _id: pago._id,
+              estado: pago.estado,
+              referencia: pago.referencia,
+              importe: Number(pago.importe || 0),
+              comprobante_url: pago.comprobante_url,
+              motivo_rechazo: pago.motivo_rechazo || null,
+            }
+          : null,
+      });
+    }
+
+    return res.status(200).json({ reservas: resultado });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   crearReservaTemporal,
   obtenerReservaActiva,
   cancelarReserva,
+  obtenerMisReservas,
 };
+

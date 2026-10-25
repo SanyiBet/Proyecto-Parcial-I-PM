@@ -8,6 +8,7 @@ const {
   crearReservaTemporal,
   obtenerReservaActiva,
   cancelarReserva,
+  obtenerMisReservas,
 } = require("../controllers/reservas.controller");
 const { authMiddleware } = require("../middleware/auth.middleware");
 
@@ -18,6 +19,7 @@ router.use(authMiddleware);
 
 router.post("/", crearReservaTemporal);
 router.get("/activa", obtenerReservaActiva);
+router.get("/mis-reservas", obtenerMisReservas);
 router.post("/:id/cancelar", cancelarReserva);
 
 module.exports = router;

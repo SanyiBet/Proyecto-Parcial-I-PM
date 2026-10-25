@@ -401,10 +401,49 @@ async function rechazarPago(req, res, next) {
   }
 }
 
+/**
+ * GET /api/pagos/mis-pagos
+ * Obtiene todos los comprobantes y pagos asociados al cliente en sesión
+ */
+async function obtenerMisPagos(req, res, next) {
+  try {
+    const usuarioId = req.usuario?.sub;
+    if (!usuarioId) {
+      return res.status(401).json({ error: "No autenticado" });
+    }
+
+    const db = obtenerDB();
+    const reservasUsuario = await db
+      .collection("reservas")
+      .find({ usuario_id: usuarioId })
+      .project({ _id: 1 })
+      .toArray();
+
+    const idsReservas = reservasUsuario.map((r) => r._id);
+
+    const pagos = await db
+      .collection("pagos")
+      .find({
+        $or: [
+          { reserva_id: { $in: idsReservas } },
+          { reservas_asociadas: { $in: idsReservas } },
+        ],
+      })
+      .sort({ creado_en: -1 })
+      .toArray();
+
+    return res.status(200).json({ pagos });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   registrarPago,
   obtenerPagoPorReserva,
   listarPagosPendientes,
   aprobarPago,
   rechazarPago,
+  obtenerMisPagos,
 };
+

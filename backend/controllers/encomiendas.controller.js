@@ -586,6 +586,34 @@ async function registrarMovimientoEncomienda(req, res, next) {
   }
 }
 
+/**
+ * GET /api/encomiendas/mis-encomiendas
+ * Lista encomiendas donde la cédula del cliente autenticado coincide con remitente o destinatario
+ */
+async function listarMisEncomiendas(req, res, next) {
+  try {
+    const usuarioId = req.usuario?.sub;
+    const db = obtenerDB();
+    const usuario = await db.collection("usuarios").findOne({ _id: usuarioId });
+    if (!usuario || !usuario.cedula) {
+      return res.status(200).json({ encomiendas: [] });
+    }
+
+    const cedula = String(usuario.cedula).trim();
+    const encomiendas = await db
+      .collection("encomiendas")
+      .find({
+        $or: [{ "remitente.cedula": cedula }, { "destinatario.cedula": cedula }],
+      })
+      .sort({ creada_en: -1 })
+      .toArray();
+
+    return res.status(200).json({ encomiendas });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   calcularTarifaEncomienda,
   generarCodigoRastreo,
@@ -595,5 +623,7 @@ module.exports = {
   obtenerEncomiendaPorId,
   rastrearEncomiendaPublico,
   registrarMovimientoEncomienda,
+  listarMisEncomiendas,
 };
+
 
