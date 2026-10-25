@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { PagosService } from '../../../core/services/pagos.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { SweetAlertService } from '../../../core/services/sweet-alert.service';
+import { TicketService } from '../../../core/services/ticket.service';
 import { environment } from '../../../../environments/environment';
 
 @Component({
@@ -16,6 +17,7 @@ export class PanelBoleteriaComponent implements OnInit {
   private pagosService = inject(PagosService);
   public authService = inject(AuthService);
   private sweetAlert = inject(SweetAlertService);
+  public ticketService = inject(TicketService);
 
   public readonly baseUrl = environment.apiUrl.replace('/api', '');
 
@@ -150,5 +152,26 @@ export class PanelBoleteriaComponent implements OnInit {
         this.sweetAlert.error('Error al rechazar', err.error?.mensaje || 'Ocurrió un error al procesar el rechazo.');
       },
     });
+  }
+
+  public async verBoletoDigital(pago: any): Promise<void> {
+    const boletoData = await this.ticketService.generarQRPasaje({
+      boleto_id: pago.reserva_id || pago._id,
+      codigo_seguridad: `TRO-${(pago.referencia || 'SEC').toUpperCase()}`,
+      origen: pago.viaje_detalle?.ruta?.origen || 'Machala',
+      destino: pago.viaje_detalle?.ruta?.destino || 'Guayaquil',
+      fecha_salida: pago.viaje_detalle?.salida || new Date(),
+      hora_salida: pago.viaje_detalle?.salida
+        ? new Date(pago.viaje_detalle.salida).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : '08:00',
+      asiento_numero: pago.reserva_detalle?.asiento_numero || '12',
+      tipo_asiento: 'Estándar',
+      bus_unidad: pago.viaje_detalle?.bus?.unidad || '04',
+      pasajero_nombre: pago.pasajero_detalle?.nombre || 'Pasajero TransOrense',
+      pasajero_cedula: pago.pasajero_detalle?.identificacion || '0705123456',
+      importe: pago.importe,
+      referencia_pago: pago.referencia,
+    });
+    this.ticketService.abrirModal(boletoData);
   }
 }

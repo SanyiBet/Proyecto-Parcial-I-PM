@@ -8,6 +8,7 @@ import {
   MovimientoHito,
 } from '../../../core/services/encomiendas.service';
 import { SweetAlertService } from '../../../core/services/sweet-alert.service';
+import { TicketService } from '../../../core/services/ticket.service';
 import { validarCedulaEcuatorianaMatematica } from '../../../shared/validators/cedula.validator';
 
 @Component({
@@ -19,6 +20,7 @@ import { validarCedulaEcuatorianaMatematica } from '../../../shared/validators/c
 export class PanelOperadorEncomiendasComponent implements OnInit {
   private encomiendasService = inject(EncomiendasService);
   private sweetAlert = inject(SweetAlertService);
+  public ticketService = inject(TicketService);
 
   // Pestaña activa ('registro' | 'bandeja')
   public pestanaActiva = signal<'registro' | 'bandeja'>('registro');
@@ -204,8 +206,27 @@ export class PanelOperadorEncomiendasComponent implements OnInit {
       next: (res) => {
         this.cargando.set(false);
         this.encomiendaEmitida.set(res.encomienda);
-        this.mostrarModalGuia.set(true);
         this.sweetAlert.toast('success', `Guía ${res.encomienda.codigo_rastreo} generada con éxito.`);
+
+        // Generar QR de guía y abrir ticket oficial (CARD-37)
+        this.ticketService
+          .generarQRGuia({
+            guia_id: res.encomienda.id || (res.encomienda as any)._id,
+            codigo_rastreo: res.encomienda.codigo_rastreo,
+            origen: res.encomienda.origen,
+            destino: res.encomienda.destino,
+            fecha_emision: res.encomienda.creada_en || new Date(),
+            remitente_nombre: res.encomienda.remitente.nombre,
+            remitente_cedula: res.encomienda.remitente.cedula,
+            destinatario_nombre: res.encomienda.destinatario.nombre,
+            destinatario_cedula: res.encomienda.destinatario.cedula,
+            descripcion_paquete: this.nuevoRegistro.descripcion_paquete || 'Paquete Estándar',
+            peso_kg: res.encomienda.peso_kg,
+            precio_final: res.encomienda.precio_final,
+          })
+          .then((guiaData) => {
+            this.ticketService.abrirModal(guiaData);
+          });
 
         // Limpiar formulario
         this.limpiarFormulario();
@@ -330,9 +351,22 @@ export class PanelOperadorEncomiendasComponent implements OnInit {
     this.encomiendaSeleccionada.set(null);
   }
 
-  public verGuia(item: EncomiendaItem): void {
-    this.encomiendaEmitida.set(item);
-    this.mostrarModalGuia.set(true);
+  public async verGuia(item: EncomiendaItem): Promise<void> {
+    const guiaData = await this.ticketService.generarQRGuia({
+      guia_id: item._id,
+      codigo_rastreo: item.codigo_rastreo,
+      origen: item.origen,
+      destino: item.destino,
+      fecha_emision: item.creada_en || new Date(),
+      remitente_nombre: item.remitente.nombre,
+      remitente_cedula: item.remitente.cedula,
+      destinatario_nombre: item.destinatario.nombre,
+      destinatario_cedula: item.destinatario.cedula,
+      descripcion_paquete: (item as any).descripcion_paquete || 'Paquete / Encomienda Estándar',
+      peso_kg: item.peso_kg,
+      precio_final: item.precio_final,
+    });
+    this.ticketService.abrirModal(guiaData);
   }
 
   public cerrarModalGuia(): void {

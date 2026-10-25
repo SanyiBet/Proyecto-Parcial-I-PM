@@ -250,6 +250,16 @@
               <!-- Acciones de Verificación -->
               <td class="py-3.5 px-4 text-center">
                 <div class="inline-flex items-center gap-2">
+                  <!-- Botón Ver Boleto QR (CARD-37) -->
+                  <button
+                    type="button"
+                    (click)="verBoletoDigital(p)"
+                    class="px-2.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-xs flex items-center gap-1 transition-all active:scale-95"
+                    title="Emitir e Imprimir Boleto Digital Oficial con QR"
+                  >
+                    <span>🎫</span> Boleto QR
+                  </button>
+
                   <!-- Botón Aprobar -->
                   <button
                     type="button"
@@ -353,23 +363,33 @@
             <span class="text-xs font-bold text-blue-700 dark:text-blue-300">Ver ➔</span>
           </div>
 
-          <!-- Fila 4: Botones Táctiles Grandes de Aprobación / Rechazo -->
-          <div class="grid grid-cols-2 gap-2.5 pt-1">
+          <!-- Fila 4: Botones Táctiles Grandes de Aprobación, Rechazo y Boleto QR (CARD-37) -->
+          <div class="space-y-2 pt-1">
+            <div class="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                (click)="confirmarAprobacion(p)"
+                [disabled]="procesandoAccion()"
+                class="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs shadow-sm flex items-center justify-center gap-1.5 transition-all disabled:opacity-50"
+              >
+                <span>✓</span> Aprobar Pago
+              </button>
+              <button
+                type="button"
+                (click)="confirmarRechazo(p)"
+                [disabled]="procesandoAccion()"
+                class="w-full py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 active:scale-95 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 font-bold text-xs shadow-sm flex items-center justify-center gap-1.5 transition-all disabled:opacity-50"
+              >
+                <span>✕</span> Rechazar
+              </button>
+            </div>
+
             <button
               type="button"
-              (click)="confirmarAprobacion(p)"
-              [disabled]="procesandoAccion()"
-              class="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs shadow-sm flex items-center justify-center gap-1.5 transition-all disabled:opacity-50"
+              (click)="verBoletoDigital(p)"
+              class="w-full py-2.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-bold text-xs shadow-sm flex items-center justify-center gap-1.5 transition-all"
             >
-              <span>✓</span> Aprobar Pago
-            </button>
-            <button
-              type="button"
-              (click)="confirmarRechazo(p)"
-              [disabled]="procesandoAccion()"
-              class="w-full py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 active:scale-95 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 font-bold text-xs shadow-sm flex items-center justify-center gap-1.5 transition-all disabled:opacity-50"
-            >
-              <span>✕</span> Rechazar
+              <span>🎫</span> Emitir / Imprimir Boleto Digital QR
             </button>
           </div>
         </div>

@@ -473,3 +473,13 @@
   </div>
 </div>
 
+<!-- ==========================================================================
+     MODAL DE BOLETO DIGITAL OFICIAL Y GUÍA TÉRMICA CON QR (CARD-37)
+     ========================================================================== -->
+<app-ticket-digital
+  *ngIf="ticketService.ticketActivo()"
+  [ticket]="ticketService.ticketActivo()"
+  (cerrar)="ticketService.cerrarModal()"
+></app-ticket-digital>
+
+

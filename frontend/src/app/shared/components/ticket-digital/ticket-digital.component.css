@@ -1,0 +1,51 @@
+/* ==========================================================================
+   TICKET DIGITAL & GUÍA TÉRMICA - ESTILOS E IMPRESIÓN (CARD-37)
+   ========================================================================== */
+
+/* Muescas o cortes laterales estilo boleto perforado */
+.ticket-notch {
+  position: absolute;
+  top: 50%;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 9999px;
+  background-color: rgb(2 6 23 / 0.8); /* slate-950/80 backdrop match */
+  transform: translateY(-50%);
+}
+
+.ticket-notch-left {
+  left: -0.625rem;
+}
+
+.ticket-notch-right {
+  right: -0.625rem;
+}
+
+/* Reglas de impresión para formato ticket térmico o A4 */
+@media print {
+  /* Ocultar elementos externos del sitio durante la impresión */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Mostrar exclusivamente el contenedor del boleto */
+  .fixed,
+  .fixed * {
+    visibility: visible;
+  }
+
+  .fixed {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .ticket-notch {
+    display: none !important;
+  }
+}
