@@ -56,11 +56,21 @@ jobs:
           npm install
 
       - name: Ejecutar pruebas unitarias automatizadas del Backend
+        env:
+          NODE_ENV: test
+          JWT_SECRET: super_secreto_transorense_ci_pipeline_2026
+          UPSTASH_REDIS_REST_URL: https://mock-redis.upstash.io
+          UPSTASH_REDIS_REST_TOKEN: mock_token_for_ci
         run: |
           cd backend
           npm test
 
       - name: Ejecutar suite de pruebas de integración End-to-End (E2E - CARD-28)
+        env:
+          NODE_ENV: test
+          JWT_SECRET: super_secreto_transorense_ci_pipeline_2026
+          UPSTASH_REDIS_REST_URL: https://mock-redis.upstash.io
+          UPSTASH_REDIS_REST_TOKEN: mock_token_for_ci
         run: |
           cd backend
           npm run test:e2e

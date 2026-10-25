@@ -1,0 +1,43 @@
+# ==============================================================================
+# PROYECTO TRANSORENSE - REGLAS DE EXCLUSIÓN GIT (.gitignore)
+# ==============================================================================
+
+# Variables de entorno y secretos sensibles
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.cert
+
+# Dependencias de paquetes
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# Compilación y builds (Angular)
+dist/
+tmp/
+out-tsc/
+.angular/
+
+# Logs del sistema y gestores de paquetes
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Almacenamiento local de comprobantes bancarios subidos por clientes (LOPDP)
+backend/uploads/comprobantes/*
+!backend/uploads/comprobantes/.gitkeep
+
+# Archivos y carpetas del sistema operativo y editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Documentos y notas locales de trabajo personal (NO subir a GitHub)
+ACTIVIDADES_KANBAN_TRANSORENSE.txt
+CONTEXTO_ESTADO_ACTUAL.md
+REGLA DE ORO Y RESTRICCIÓN PRINCIPA.txt
