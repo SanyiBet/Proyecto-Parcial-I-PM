@@ -1,0 +1,688 @@
+openapi: 3.0.3
+info:
+  title: Sistema TransOrense - API RESTful de Transporte Interprovincial y Encomiendas
+  description: |
+    Especificación formal de la arquitectura de servicios backend para la Cooperativa de Transportes TransOrense.
+    Diseñada bajo el paradigma Spec-Driven Development, integrando control de concurrencia distribuido con Redis (bloqueo atómico con TTL de 10 min),
+    verificación transaccional de pagos, gestión de envíos y encomiendas, auditoría automática y cumplimiento de la LOPDP ecuatoriana.
+  version: 1.0.0
+  contact:
+    name: Equipo de Desarrollo e Ingeniería de Software - TransOrense EP
+    email: soporte@transorense.com.ec
+
+servers:
+  - url: http://localhost:3000/api
+    description: Servidor de Desarrollo Local
+  - url: https://api.transorense.com.ec/api
+    description: Servidor de Producción / Staging
+
+tags:
+  - name: Sistema
+    description: Endpoints de diagnóstico y verificación de salud de la plataforma
+  - name: Autenticación & Perfil
+    description: Registro, inicio de sesión JWT, OAuth Google y vinculación de cédula ecuatoriana
+  - name: Viajes & Rutas
+    description: Catálogo público de rutas, frecuencias, unidades y disponibilidad de asientos en vivo
+  - name: Reservas de Asientos
+    description: Bloqueo concurrente temporal con TTL de 10 minutos en Redis y persistencia en MongoDB
+  - name: Pasajeros
+    description: Asignación de datos nominales e identificación para emisión de pasajes
+  - name: Pagos & Comprobantes
+    description: Registro de comprobantes bancarios, verificación en boletería y descarga protegida LOPDP
+  - name: Encomiendas & Carga
+    description: Cotizador por peso volumétrico, emisión de guías de envío y rastreo público
+  - name: Administración (RBAC)
+    description: KPIs del dashboard directivo, gestión de usuarios, rutas y asignación de buses
+  - name: Auditoría & Incidencias
+    description: Bitácora centralizada de trazabilidad técnica y reporte de incidencias
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Ingrese el token JWT emitido en el endpoint `/auth/login` o `/auth/register`.
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Bad Request
+        mensaje:
+          type: string
+          example: Parámetros de solicitud inválidos o incompletos
+        codigo:
+          type: integer
+          example: 400
+
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "6719b2a1e8a93e507b9e1101"
+        nombre:
+          type: string
+          example: "Noemi Sánchez"
+        correo:
+          type: string
+          format: email
+          example: "noemi@example.com"
+        cedula:
+          type: string
+          example: "0705123456"
+        roles:
+          type: array
+          items:
+            type: string
+            enum: [cliente, agente_boleteria, operador_encomiendas, auditor_tecnico, administrador]
+          example: ["cliente"]
+
+    Ruta:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "6719b2a1e8a93e507b9e2001"
+        origen:
+          type: string
+          example: "Machala"
+        destino:
+          type: string
+          example: "Guayaquil"
+        duracion_estimada_min:
+          type: integer
+          example: 180
+        tarifa_base:
+          type: number
+          format: float
+          example: 8.50
+        activo:
+          type: boolean
+          example: true
+
+    Viaje:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "6719b2a1e8a93e507b9e3001"
+        ruta_id:
+          type: string
+          example: "6719b2a1e8a93e507b9e2001"
+        bus_id:
+          type: string
+          example: "6719b2a1e8a93e507b9e4001"
+        fecha_salida:
+          type: string
+          format: date-time
+          example: "2026-10-25T08:00:00.000Z"
+        precio:
+          type: number
+          format: float
+          example: 8.50
+        asientos_totales:
+          type: integer
+          example: 40
+        asientos_disponibles:
+          type: integer
+          example: 32
+
+    ReservaTemporal:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "6719b2a1e8a93e507b9e5001"
+        viaje_id:
+          type: string
+          example: "6719b2a1e8a93e507b9e3001"
+        usuario_id:
+          type: string
+          example: "6719b2a1e8a93e507b9e1101"
+        asiento_numero:
+          type: string
+          example: "12"
+        estado:
+          type: string
+          enum: [reservada, confirmada, cancelada, expirada]
+          example: "reservada"
+        vence_en:
+          type: string
+          format: date-time
+          example: "2026-10-25T08:10:00.000Z"
+
+    Pago:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "6719b2a1e8a93e507b9e6001"
+        reserva_id:
+          type: string
+          example: "6719b2a1e8a93e507b9e5001"
+        referencia:
+          type: string
+          example: "TRANSF-849201"
+        importe:
+          type: number
+          format: float
+          example: 8.50
+        metodo:
+          type: string
+          example: "transferencia"
+        estado:
+          type: string
+          enum: [en_revision, pendiente, aprobado, rechazado]
+          example: "en_revision"
+        comprobante_url:
+          type: string
+          example: "/api/pagos/comprobante/comp_1729829101_849201.png"
+
+    Encomienda:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "6719b2a1e8a93e507b9e7001"
+        codigo_rastreo:
+          type: string
+          example: "TRO-8942-GYE"
+        origen:
+          type: string
+          example: "Machala"
+        destino:
+          type: string
+          example: "Guayaquil"
+        peso_kg:
+          type: number
+          format: float
+          example: 3.5
+        precio_final:
+          type: number
+          format: float
+          example: 4.70
+        estado:
+          type: string
+          enum: [recibida, en_transito, en_destino, entregada, devuelta]
+          example: "recibida"
+        creada_en:
+          type: string
+          format: date-time
+          example: "2026-10-25T09:30:00.000Z"
+
+paths:
+  /health:
+    get:
+      tags: [Sistema]
+      summary: Diagnóstico de salud y conectividad de bases de datos
+      responses:
+        200:
+          description: Servicios operativos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  estado:
+                    type: string
+                    example: "OK"
+                  mongo:
+                    type: string
+                    example: "Conectado"
+                  redis:
+                    type: string
+                    example: "Operativo"
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /auth/register:
+    post:
+      tags: [Autenticación & Perfil]
+      summary: Registro de nuevo cliente con validación matemática de cédula
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre, correo, password, cedula]
+              properties:
+                nombre: { type: string, example: "Carlos Morales" }
+                correo: { type: string, format: email, example: "carlos@example.com" }
+                password: { type: string, format: password, example: "Password123!" }
+                cedula: { type: string, example: "0705123456" }
+      responses:
+        201:
+          description: Usuario registrado exitosamente
+        400:
+          description: Datos inválidos o cédula incorrecta
+        409:
+          description: Correo o cédula ya registrada
+
+  /auth/login:
+    post:
+      tags: [Autenticación & Perfil]
+      summary: Inicio de sesión con credenciales y emisión de JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [correo, password]
+              properties:
+                correo: { type: string, format: email, example: "carlos@example.com" }
+                password: { type: string, format: password, example: "Password123!" }
+      responses:
+        200:
+          description: Autenticación exitosa con token Bearer
+        401:
+          description: Credenciales incorrectas
+
+  /auth/google:
+    post:
+      tags: [Autenticación & Perfil]
+      summary: Autenticación federada mediante Google Identity Services
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [credential]
+              properties:
+                credential: { type: string, description: "Google JWT Token" }
+      responses:
+        200:
+          description: Autenticación federada exitosa
+
+  /auth/perfil:
+    get:
+      tags: [Autenticación & Perfil]
+      summary: Perfil y roles del usuario en sesión
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Perfil de usuario recuperado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+
+  /viajes/buscar:
+    get:
+      tags: [Viajes & Rutas]
+      summary: Búsqueda pública de frecuencias disponibles por origen, destino y fecha
+      parameters:
+        - name: origen
+          in: query
+          required: false
+          schema: { type: string, example: "Machala" }
+        - name: destino
+          in: query
+          required: false
+          schema: { type: string, example: "Guayaquil" }
+        - name: fecha
+          in: query
+          required: false
+          schema: { type: string, format: date, example: "2026-10-25" }
+      responses:
+        200:
+          description: Listado de viajes disponibles
+
+  /viajes/{id}/asientos:
+    get:
+      tags: [Viajes & Rutas]
+      summary: Mapa interactivo de asientos en tiempo real (disponibles, bloqueados con TTL y ocupados)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Matriz de asientos con estado y temporizador activo
+
+  /reservas:
+    post:
+      tags: [Reservas de Asientos]
+      summary: Bloqueo atómico de asientos con TTL de 10 minutos (Concurrencia Redis + Atlas)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [viaje_id, asientos]
+              properties:
+                viaje_id: { type: string }
+                asientos:
+                  type: array
+                  items: { type: string }
+                  example: ["12", "13"]
+      responses:
+        201:
+          description: Asientos bloqueados exitosamente por 10 minutos
+        409:
+          description: Conflicto de concurrencia (uno de los asientos ya está bloqueado u ocupado)
+
+  /reservas/{id}/cancelar:
+    post:
+      tags: [Reservas de Asientos]
+      summary: Cancelación anticipada y liberación inmediata del asiento en Redis y Atlas
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Asiento liberado al inventario
+
+  /pasajeros:
+    post:
+      tags: [Pasajeros]
+      summary: Registro de pasajeros finales vinculados a una reserva activa
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reserva_id, pasajeros]
+              properties:
+                reserva_id: { type: string }
+                pasajeros:
+                  type: array
+                  items:
+                    type: object
+                    required: [nombre, identificacion, asiento_numero]
+                    properties:
+                      nombre: { type: string, example: "María Zambrano" }
+                      identificacion: { type: string, example: "0704987654" }
+                      asiento_numero: { type: string, example: "12" }
+      responses:
+        201:
+          description: Pasajeros asociados correctamente
+
+  /pagos:
+    post:
+      tags: [Pagos & Comprobantes]
+      summary: Subida multipart o base64 de comprobante con validación de Magic Bytes y LOPDP
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reserva_id, referencia, importe, comprobante_base64]
+              properties:
+                reserva_id: { type: string }
+                referencia: { type: string, example: "DEP-908123" }
+                importe: { type: number, format: float, example: 8.50 }
+                comprobante_base64: { type: string, description: "DataURL de PNG, JPG o PDF validado" }
+      responses:
+        201:
+          description: Comprobante registrado y puesto en cola de revisión
+
+  /pagos/comprobante/{nombreArchivo}:
+    get:
+      tags: [Pagos & Comprobantes]
+      summary: Descarga y visualización protegida del comprobante bancario (Cumplimiento LOPDP)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: nombreArchivo
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Archivo binario seguro
+          content:
+            image/png: {}
+            image/jpeg: {}
+            application/pdf: {}
+        403:
+          description: Acceso no autorizado (no es el dueño de la reserva ni agente de boletería)
+
+  /pagos/pendientes:
+    get:
+      tags: [Pagos & Comprobantes]
+      summary: Bandeja operativa de pagos en revisión para Agentes de Boletería y Administradores
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Colección de comprobantes pendientes de aprobación
+
+  /pagos/{id}/aprobar:
+    post:
+      tags: [Pagos & Comprobantes]
+      summary: Aprobación transaccional de pago, confirmación de reserva y emisión de boleto
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Pago aprobado y boleto listo para control de abordaje
+
+  /pagos/{id}/rechazar:
+    post:
+      tags: [Pagos & Comprobantes]
+      summary: Rechazo de comprobante bancario, anulación de reserva y liberación de asientos
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [motivo]
+              properties:
+                motivo: { type: string, example: "Valor no coincide con el total de pasajes." }
+      responses:
+        200:
+          description: Pago rechazado y asientos restituidos
+
+  /encomiendas/cotizar:
+    post:
+      tags: [Encomiendas & Carga]
+      summary: Cotización instantánea por peso volumétrico (IATA /5000) y peso báscula
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [origen, destino, peso_kg, largo_cm, ancho_cm, alto_cm]
+              properties:
+                origen: { type: string, example: "Machala" }
+                destino: { type: string, example: "Guayaquil" }
+                peso_kg: { type: number, example: 2.5 }
+                largo_cm: { type: number, example: 30 }
+                ancho_cm: { type: number, example: 20 }
+                alto_cm: { type: number, example: 15 }
+      responses:
+        200:
+          description: Cálculo tarifario detallado con desglose
+
+  /encomiendas/rastreo/{codigo}:
+    get:
+      tags: [Encomiendas & Carga]
+      summary: Rastreo público de paquete con trazabilidad cronológica (Sin datos sensibles)
+      parameters:
+        - name: codigo
+          in: path
+          required: true
+          schema: { type: string, example: "TRO-8942-GYE" }
+      responses:
+        200:
+          description: Línea de tiempo de estados físicos de la encomienda
+
+  /encomiendas:
+    post:
+      tags: [Encomiendas & Carga]
+      summary: Registro de encomienda en ventanilla y emisión de guía oficial (Operadores)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [remitente, destinatario, origen, destino, peso_kg, dimensiones]
+              properties:
+                remitente:
+                  type: object
+                  required: [nombre, cedula, telefono]
+                  properties:
+                    nombre: { type: string }
+                    cedula: { type: string }
+                    telefono: { type: string }
+                destinatario:
+                  type: object
+                  required: [nombre, cedula, telefono]
+                  properties:
+                    nombre: { type: string }
+                    cedula: { type: string }
+                    telefono: { type: string }
+                origen: { type: string }
+                destino: { type: string }
+                peso_kg: { type: number }
+                dimensiones:
+                  type: object
+                  properties:
+                    largo_cm: { type: number }
+                    ancho_cm: { type: number }
+                    alto_cm: { type: number }
+      responses:
+        201:
+          description: Guía emitida con código de rastreo único
+
+  /encomiendas/{id}/movimientos:
+    post:
+      tags: [Encomiendas & Carga]
+      summary: Registro de nuevo movimiento físico de la carga en ruta o terminal
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [estado, ubicacion]
+              properties:
+                estado: { type: string, enum: [recibida, en_transito, en_destino, entregada, devuelta] }
+                ubicacion: { type: string, example: "Terminal Terrestre Guayaquil - Bodega A" }
+                observacion: { type: string, example: "Cargado en unidad #18" }
+      responses:
+        200:
+          description: Movimiento registrado e historial actualizado
+
+  /admin/metricas:
+    get:
+      tags: [Administración (RBAC)]
+      summary: KPIs y estadísticas directivas en tiempo real
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Métricas de recaudación, viajes activos, ocupación de buses y encomiendas
+
+  /admin/usuarios/{id}/rol:
+    patch:
+      tags: [Administración (RBAC)]
+      summary: Actualización de roles y privilegios RBAC para usuarios del sistema
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [roles]
+              properties:
+                roles:
+                  type: array
+                  items: { type: string }
+      responses:
+        200:
+          description: Permisos de usuario actualizados
+
+  /auditoria:
+    get:
+      tags: [Auditoría & Incidencias]
+      summary: Consulta paginada de logs de auditoría centralizada con filtros de trazabilidad
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: accion
+          in: query
+          required: false
+          schema: { type: string }
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, default: 50 }
+      responses:
+        200:
+          description: Registros de auditoría devueltos
+
+  /auditoria/incidencias:
+    post:
+      tags: [Auditoría & Incidencias]
+      summary: Reporte de incidencias técnicas con severidad y sincronización con GitHub Issues
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [titulo, descripcion, severidad]
+              properties:
+                titulo: { type: string, example: "Impresión de guía térmica lenta" }
+                descripcion: { type: string, example: "Retardo en renderizado de código QR" }
+                severidad: { type: string, enum: [Baja, Media, Alta, Critica] }
+      responses:
+        201:
+          description: Incidencia reportada y registrada en bitácora

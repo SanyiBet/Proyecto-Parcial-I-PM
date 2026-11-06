@@ -12,7 +12,10 @@ import { FormularioPagoComponent } from './features/viajes/formulario-pago/formu
 import { PanelBoleteriaComponent } from './features/boleteria/panel-boleteria/panel-boleteria.component';
 import { EncomiendasPublicoComponent } from './features/encomiendas/encomiendas-publico/encomiendas-publico.component';
 import { PanelOperadorEncomiendasComponent } from './features/encomiendas/panel-operador-encomiendas/panel-operador-encomiendas.component';
-import { MiCuentaComponent } from './features/cliente/mi-cuenta/mi-cuenta.component';
+import { AdminDashboardComponent } from './features/admin/dashboard/admin-dashboard.component';
+import { PanelAuditoriaComponent } from './features/auditoria/panel-auditoria/panel-auditoria.component';
+import { TicketDigitalComponent } from './shared/components/ticket-digital/ticket-digital.component';
+import { TicketService } from './core/services/ticket.service';
 import { Viaje } from './core/models/viajes.models';
 
 @Component({
@@ -29,7 +32,9 @@ import { Viaje } from './core/models/viajes.models';
     PanelBoleteriaComponent,
     EncomiendasPublicoComponent,
     PanelOperadorEncomiendasComponent,
-    MiCuentaComponent,
+    AdminDashboardComponent,
+    PanelAuditoriaComponent,
+    TicketDigitalComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -38,9 +43,10 @@ export class App {
   public themeService = inject(ThemeService);
   public sweetAlert = inject(SweetAlertService);
   public authService = inject(AuthService);
+  public ticketService = inject(TicketService);
 
-  // Módulo activo en la aplicación ('viajes' | 'boleteria' | 'encomiendas' | 'operador_encomiendas' | 'mi_cuenta')
-  public moduloActivo = signal<'viajes' | 'boleteria' | 'encomiendas' | 'operador_encomiendas' | 'mi_cuenta'>('viajes');
+  // Módulo activo en la aplicación ('viajes' | 'boleteria' | 'encomiendas' | 'operador_encomiendas' | 'admin' | 'auditoria')
+  public moduloActivo = signal<'viajes' | 'boleteria' | 'encomiendas' | 'operador_encomiendas' | 'admin' | 'auditoria'>('viajes');
 
   // Control de permisos para Agente de Boletería y Administrador (CARD-19)
   public puedeAccederBoleteria = computed(() => {
@@ -54,8 +60,23 @@ export class App {
     return roles.includes('administrador') || roles.includes('operador_encomiendas');
   });
 
+  // Control de permisos para Administrador Directivo (CARD-26)
+  public puedeAccederAdmin = computed(() => {
+    const roles = this.authService.usuarioActual()?.roles || [];
+    return roles.includes('administrador');
+  });
+
+  // Control de permisos para Auditor Técnico y Administrador (CARD-27)
+  public puedeAccederAuditoria = computed(() => {
+    const roles = this.authService.usuarioActual()?.roles || [];
+    return roles.includes('administrador') || roles.includes('auditor_tecnico');
+  });
+
   // Control de modal de autenticación (CARD-12)
   public mostrarModalAuth = signal<boolean>(false);
+
+  // Control de Menú Móvil Táctil Desplegable (CARD-34)
+  public menuMovilAbierto = signal<boolean>(false);
 
   // Flujo de compra, asientos y pagos (CARD-15, CARD-16 y CARD-18)
   public viajeActivo = signal<Viaje | null>(null);
@@ -70,7 +91,16 @@ export class App {
     this.themeService.toggleTheme();
   }
 
+  public alternarMenuMovil(): void {
+    this.menuMovilAbierto.update((v) => !v);
+  }
+
+  public cerrarMenuMovil(): void {
+    this.menuMovilAbierto.set(false);
+  }
+
   public abrirModalAuth(): void {
+    this.cerrarMenuMovil();
     this.mostrarModalAuth.set(true);
   }
 
@@ -83,6 +113,7 @@ export class App {
   }
 
   public cerrarSesion(): void {
+    this.cerrarMenuMovil();
     this.authService.cerrarSesion();
     this.sweetAlert.toast('info', 'Has cerrado sesión exitosamente.');
   }
@@ -93,29 +124,40 @@ export class App {
   }
 
   public onVolverABuscador(): void {
+    this.cerrarMenuMovil();
     this.moduloActivo.set('viajes');
     this.viajeActivo.set(null);
     this.reservaParaPago.set(null);
   }
 
   public irAViajes(): void {
+    this.cerrarMenuMovil();
     this.moduloActivo.set('viajes');
   }
 
   public irAEncomiendas(): void {
+    this.cerrarMenuMovil();
     this.moduloActivo.set('encomiendas');
   }
 
   public irABoleteria(): void {
+    this.cerrarMenuMovil();
     this.moduloActivo.set('boleteria');
   }
 
   public irAOperadorEncomiendas(): void {
+    this.cerrarMenuMovil();
     this.moduloActivo.set('operador_encomiendas');
   }
 
-  public irAMiCuenta(): void {
-    this.moduloActivo.set('mi_cuenta');
+  public irAAdmin(): void {
+    this.cerrarMenuMovil();
+    this.moduloActivo.set('admin');
+  }
+
+  public irAAuditoria(): void {
+    this.cerrarMenuMovil();
+    this.moduloActivo.set('auditoria');
   }
 
   public onReservaConfirmada(evento: {

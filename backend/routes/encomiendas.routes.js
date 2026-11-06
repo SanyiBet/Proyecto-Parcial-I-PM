@@ -11,7 +11,6 @@ const {
   obtenerEncomiendaPorId,
   rastrearEncomiendaPublico,
   registrarMovimientoEncomienda,
-  listarMisEncomiendas,
 } = require("../controllers/encomiendas.controller");
 const { authMiddleware, roleMiddleware } = require("../middleware/auth.middleware");
 
@@ -31,9 +30,6 @@ router.get("/rastreo/:codigo", rastrearEncomiendaPublico);
 // 2. RUTAS PROTEGIDAS (Requieren JWT activo)
 // ==========================================
 router.use(authMiddleware);
-
-// Mis encomiendas personales asociadas a la cédula del cliente autenticado
-router.get("/mis-encomiendas", listarMisEncomiendas);
 
 // Registro de encomienda: solo para personal autorizado
 router.post(

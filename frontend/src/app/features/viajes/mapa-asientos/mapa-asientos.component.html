@@ -1,100 +1,100 @@
-<div class="space-y-6">
-  <!-- Botón Volver y Resumen del Viaje -->
-  <div class="flex items-center justify-between bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
+<div class="space-y-4 sm:space-y-6">
+  <!-- Botón Volver y Resumen del Viaje Responsivo -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-800 p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
     <button
       type="button"
       (click)="volver.emit()"
-      class="inline-flex items-center space-x-2 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-transorense-verde transition-colors"
+      class="inline-flex items-center space-x-2 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-transorense-verde transition-colors self-start"
     >
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
       </svg>
       <span>Volver a Horarios</span>
     </button>
 
-    <div class="text-right">
-      <div class="text-xs text-slate-400 font-medium">Viaje Seleccionado</div>
-      <div class="font-montserrat font-bold text-sm sm:text-base text-slate-900 dark:text-white">
+    <div class="text-left sm:text-right">
+      <div class="text-[11px] sm:text-xs text-slate-400 font-medium">Viaje Seleccionado</div>
+      <div class="font-montserrat font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-tight">
         {{ viaje.ruta.origen }} ➔ {{ viaje.ruta.destino }}
       </div>
-      <div class="text-xs text-transorense-verde font-semibold">
+      <div class="text-[11px] sm:text-xs text-transorense-verde font-semibold mt-0.5">
         Salida: {{ viaje.salida | date: 'HH:mm' }} • {{ viaje.bus.descripcion }}
       </div>
     </div>
   </div>
 
-  <!-- Cronómetro flotante si la reserva está activa -->
+  <!-- Cronómetro flotante responsivo (CARD-35: se apila verticalmente en móviles < 640px) -->
   <div
     *ngIf="segundosRestantes() > 0"
-    class="bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 p-4 rounded-2xl shadow-lg flex items-center justify-between border border-amber-300 animate-pulse"
+    class="bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 p-3.5 sm:p-4 rounded-2xl shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3 border border-amber-300 animate-pulse text-center sm:text-left"
   >
-    <div class="flex items-center space-x-3">
-      <svg class="w-6 h-6 animate-spin text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="flex items-center space-x-2.5 sm:space-x-3">
+      <svg class="w-5 h-5 sm:w-6 sm:h-6 shrink-0 animate-spin text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
       <div>
-        <span class="font-extrabold text-sm block">¡Asientos Bloqueados Exclusivamente para ti!</span>
-        <span class="text-xs font-medium">Tiempo restante antes de liberación automática:</span>
+        <span class="font-extrabold text-xs sm:text-sm block">¡Asientos Bloqueados Exclusivamente para ti!</span>
+        <span class="text-[11px] sm:text-xs font-medium">Tiempo restante antes de liberación automática:</span>
       </div>
     </div>
 
-    <div class="flex items-center space-x-4">
-      <span class="font-mono text-2xl font-black bg-white/90 px-3 py-1 rounded-xl shadow-inner">
+    <div class="flex items-center justify-center space-x-3 w-full sm:w-auto">
+      <span class="font-mono text-xl sm:text-2xl font-black bg-white/90 px-3 py-1 rounded-xl shadow-inner">
         {{ tiempoFormateado() }}
       </span>
       <button
         type="button"
         (click)="cancelarMiReserva()"
-        class="text-xs bg-slate-900 text-white font-bold px-3 py-1.5 rounded-lg hover:bg-black transition-all"
+        class="text-xs bg-slate-900 text-white font-bold px-3 py-1.5 rounded-lg hover:bg-black transition-all active:scale-95"
       >
         Liberar
       </button>
     </div>
   </div>
 
-  <!-- Leyenda de Estados del Bus -->
-  <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-xs font-bold">
-    <div class="flex items-center space-x-2">
-      <span class="w-4 h-4 rounded-md bg-emerald-100 border-2 border-transorense-verde"></span>
+  <!-- Leyenda de Estados del Bus (Adaptable 360px - 390px) -->
+  <div class="bg-white dark:bg-slate-800 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-center gap-2.5 sm:gap-6 text-[11px] sm:text-xs font-bold">
+    <div class="flex items-center space-x-1.5">
+      <span class="w-3.5 h-3.5 rounded-md bg-emerald-100 border-2 border-transorense-verde"></span>
       <span class="text-slate-700 dark:text-slate-300">Disponible</span>
     </div>
-    <div class="flex items-center space-x-2">
-      <span class="w-4 h-4 rounded-md bg-amber-400 border-2 border-amber-500"></span>
+    <div class="flex items-center space-x-1.5">
+      <span class="w-3.5 h-3.5 rounded-md bg-amber-400 border-2 border-amber-500"></span>
       <span class="text-slate-700 dark:text-slate-300">Tu Selección</span>
     </div>
-    <div class="flex items-center space-x-2">
-      <span class="w-4 h-4 rounded-md bg-slate-200 dark:bg-slate-700 border-2 border-slate-400"></span>
-      <span class="text-slate-700 dark:text-slate-300">Bloqueo Temp (10 min)</span>
+    <div class="flex items-center space-x-1.5">
+      <span class="w-3.5 h-3.5 rounded-md bg-slate-200 dark:bg-slate-700 border-2 border-slate-400"></span>
+      <span class="text-slate-700 dark:text-slate-300">Bloqueo Temp</span>
     </div>
-    <div class="flex items-center space-x-2">
-      <span class="w-4 h-4 rounded-md bg-rose-200 border-2 border-rose-500"></span>
-      <span class="text-slate-700 dark:text-slate-300">Ocupado / Vendido</span>
+    <div class="flex items-center space-x-1.5">
+      <span class="w-3.5 h-3.5 rounded-md bg-rose-200 border-2 border-rose-500"></span>
+      <span class="text-slate-700 dark:text-slate-300">Ocupado</span>
     </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-    <!-- Distribución Gráfica del Bus (40 Asientos) -->
-    <div class="lg:col-span-8 bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+    <!-- Distribución Gráfica del Bus (CARD-35: p-3 en móvil, p-6 en sm, p-8 en lg) -->
+    <div class="lg:col-span-8 bg-white dark:bg-slate-800 rounded-2xl sm:rounded-3xl p-3 sm:p-6 lg:p-8 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center">
       
       <!-- Frente del Bus (Cabina / Volante) -->
-      <div class="w-full max-w-sm border-b-2 border-dashed border-slate-200 dark:border-slate-700 pb-4 mb-6 flex items-center justify-between px-4 text-slate-400">
-        <div class="flex items-center space-x-2">
-          <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="w-full max-w-[280px] sm:max-w-sm border-b-2 border-dashed border-slate-200 dark:border-slate-700 pb-3 sm:pb-4 mb-4 sm:mb-6 flex items-center justify-between px-2 sm:px-4 text-slate-400">
+        <div class="flex items-center space-x-1.5 sm:space-x-2">
+          <svg class="w-5 h-5 sm:w-6 sm:h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
           </svg>
-          <span class="text-[11px] font-bold uppercase tracking-wider">Conductor</span>
+          <span class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">Conductor</span>
         </div>
-        <div class="text-[11px] font-bold uppercase tracking-wider text-transorense-verde">
-          Puerta de Ingreso
+        <div class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-transorense-verde">
+          Puerta Ingreso
         </div>
       </div>
 
-      <!-- Cuadrícula de Asientos (10 filas x 4 columnas con pasillo central) -->
-      <div class="w-full max-w-sm space-y-3">
+      <!-- Cuadrícula de Asientos (CARD-35: optimizada para 360px - 390px) -->
+      <div class="w-full max-w-[290px] sm:max-w-sm space-y-2 sm:space-y-3">
         <!-- Generación de filas 1 a 10 -->
         <div *ngFor="let filaNum of [1,2,3,4,5,6,7,8,9,10]" class="flex items-center justify-between">
           <!-- Lado Izquierdo (Columnas 1 y 2) -->
-          <div class="flex space-x-2">
+          <div class="flex space-x-1.5 sm:space-x-2">
             <!-- Asiento Columna 1 (Ventana Izquierda) -->
             <ng-container *ngFor="let asiento of asientos()">
               <button
@@ -108,11 +108,11 @@
                   'bg-slate-200 dark:bg-slate-700 text-slate-400 border border-slate-300 dark:border-slate-600 cursor-not-allowed': asiento.estado === 'bloqueado_temporal' && !esAsientoSeleccionado(asiento.numero),
                   'bg-rose-100 text-rose-400 border border-rose-300 cursor-not-allowed': asiento.estado === 'ocupado'
                 }"
-                class="w-12 h-12 rounded-xl font-montserrat font-bold text-xs flex flex-col items-center justify-center transition-all relative"
+                class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl font-montserrat font-bold text-[11px] sm:text-xs flex flex-col items-center justify-center transition-all relative active:scale-95"
                 [title]="'Asiento #' + asiento.numero + ' (' + asiento.tipo + ')'"
               >
                 <span>{{ asiento.numero }}</span>
-                <span class="text-[8px] uppercase tracking-tighter opacity-70">Vent</span>
+                <span class="text-[7px] sm:text-[8px] uppercase tracking-tighter opacity-70">Vent</span>
               </button>
             </ng-container>
 
@@ -129,22 +129,22 @@
                   'bg-slate-200 dark:bg-slate-700 text-slate-400 border border-slate-300 dark:border-slate-600 cursor-not-allowed': asiento.estado === 'bloqueado_temporal' && !esAsientoSeleccionado(asiento.numero),
                   'bg-rose-100 text-rose-400 border border-rose-300 cursor-not-allowed': asiento.estado === 'ocupado'
                 }"
-                class="w-12 h-12 rounded-xl font-montserrat font-bold text-xs flex flex-col items-center justify-center transition-all relative"
+                class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl font-montserrat font-bold text-[11px] sm:text-xs flex flex-col items-center justify-center transition-all relative active:scale-95"
                 [title]="'Asiento #' + asiento.numero + ' (' + asiento.tipo + ')'"
               >
                 <span>{{ asiento.numero }}</span>
-                <span class="text-[8px] uppercase tracking-tighter opacity-70">Pasi</span>
+                <span class="text-[7px] sm:text-[8px] uppercase tracking-tighter opacity-70">Pasi</span>
               </button>
             </ng-container>
           </div>
 
           <!-- Pasillo Central -->
-          <div class="text-[10px] text-slate-300 dark:text-slate-600 font-bold tracking-widest px-2">
+          <div class="text-[9px] sm:text-[10px] text-slate-300 dark:text-slate-600 font-bold tracking-widest px-1 sm:px-2">
             F{{ filaNum }}
           </div>
 
           <!-- Lado Derecho (Columnas 3 y 4) -->
-          <div class="flex space-x-2">
+          <div class="flex space-x-1.5 sm:space-x-2">
             <!-- Asiento Columna 3 (Pasillo Derecho) -->
             <ng-container *ngFor="let asiento of asientos()">
               <button
@@ -158,11 +158,11 @@
                   'bg-slate-200 dark:bg-slate-700 text-slate-400 border border-slate-300 dark:border-slate-600 cursor-not-allowed': asiento.estado === 'bloqueado_temporal' && !esAsientoSeleccionado(asiento.numero),
                   'bg-rose-100 text-rose-400 border border-rose-300 cursor-not-allowed': asiento.estado === 'ocupado'
                 }"
-                class="w-12 h-12 rounded-xl font-montserrat font-bold text-xs flex flex-col items-center justify-center transition-all relative"
+                class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl font-montserrat font-bold text-[11px] sm:text-xs flex flex-col items-center justify-center transition-all relative active:scale-95"
                 [title]="'Asiento #' + asiento.numero + ' (' + asiento.tipo + ')'"
               >
                 <span>{{ asiento.numero }}</span>
-                <span class="text-[8px] uppercase tracking-tighter opacity-70">Pasi</span>
+                <span class="text-[7px] sm:text-[8px] uppercase tracking-tighter opacity-70">Pasi</span>
               </button>
             </ng-container>
 
@@ -179,11 +179,11 @@
                   'bg-slate-200 dark:bg-slate-700 text-slate-400 border border-slate-300 dark:border-slate-600 cursor-not-allowed': asiento.estado === 'bloqueado_temporal' && !esAsientoSeleccionado(asiento.numero),
                   'bg-rose-100 text-rose-400 border border-rose-300 cursor-not-allowed': asiento.estado === 'ocupado'
                 }"
-                class="w-12 h-12 rounded-xl font-montserrat font-bold text-xs flex flex-col items-center justify-center transition-all relative"
+                class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl font-montserrat font-bold text-[11px] sm:text-xs flex flex-col items-center justify-center transition-all relative active:scale-95"
                 [title]="'Asiento #' + asiento.numero + ' (' + asiento.tipo + ')'"
               >
                 <span>{{ asiento.numero }}</span>
-                <span class="text-[8px] uppercase tracking-tighter opacity-70">Vent</span>
+                <span class="text-[7px] sm:text-[8px] uppercase tracking-tighter opacity-70">Vent</span>
               </button>
             </ng-container>
           </div>
@@ -191,14 +191,14 @@
       </div>
     </div>
 
-    <!-- Panel Lateral: Resumen de Compra y Botón de Reserva -->
-    <div class="lg:col-span-4 bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-sm space-y-6">
-      <h3 class="font-montserrat font-bold text-lg text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700 pb-3">
+    <!-- Panel Lateral: Resumen de Compra y Botón de Reserva (CARD-35) -->
+    <div class="lg:col-span-4 bg-white dark:bg-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-slate-200 dark:border-slate-700 shadow-sm space-y-4 sm:space-y-6">
+      <h3 class="font-montserrat font-bold text-base sm:text-lg text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700 pb-3">
         Resumen de Asientos
       </h3>
 
       <div>
-        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+        <span class="text-[11px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
           Asientos Seleccionados
         </span>
         <div *ngIf="asientosSeleccionados().length === 0" class="text-xs text-slate-500 italic">
@@ -207,14 +207,14 @@
         <div *ngIf="asientosSeleccionados().length > 0" class="flex flex-wrap gap-2">
           <span
             *ngFor="let num of asientosSeleccionados()"
-            class="px-3 py-1 rounded-xl bg-transorense-amarillo text-slate-900 font-black font-mono text-sm shadow-sm"
+            class="px-2.5 sm:px-3 py-1 rounded-xl bg-transorense-amarillo text-slate-900 font-black font-mono text-xs sm:text-sm shadow-sm"
           >
             #{{ num }}
           </span>
         </div>
       </div>
 
-      <div class="space-y-2 border-t border-slate-200 dark:border-slate-700 pt-4 text-sm">
+      <div class="space-y-2 border-t border-slate-200 dark:border-slate-700 pt-3 sm:pt-4 text-xs sm:text-sm">
         <div class="flex justify-between text-slate-600 dark:text-slate-400 text-xs">
           <span>Precio por Asiento:</span>
           <span class="font-bold">${{ viaje.precio | number: '1.2-2' }}</span>
@@ -223,9 +223,9 @@
           <span>Cantidad de Boletos:</span>
           <span class="font-bold">{{ asientosSeleccionados().length }}</span>
         </div>
-        <div class="flex justify-between text-slate-900 dark:text-white text-base font-black pt-2 border-t border-slate-100 dark:border-slate-700/50">
+        <div class="flex justify-between text-slate-900 dark:text-white text-sm sm:text-base font-black pt-2 border-t border-slate-100 dark:border-slate-700/50">
           <span>Total a Pagar:</span>
-          <span class="text-transorense-verde font-montserrat text-xl">
+          <span class="text-transorense-verde font-montserrat text-lg sm:text-xl">
             ${{ totalPagar() | number: '1.2-2' }}
           </span>
         </div>
@@ -236,7 +236,7 @@
         type="button"
         (click)="confirmarReservaTemporal()"
         [disabled]="reservando() || asientosSeleccionados().length === 0"
-        class="w-full btn-transorense-primary py-3.5 rounded-2xl font-bold text-sm shadow-lg disabled:opacity-50 flex items-center justify-center space-x-2"
+        class="w-full btn-transorense-primary py-3 sm:py-3.5 rounded-2xl font-bold text-xs sm:text-sm shadow-lg disabled:opacity-50 flex items-center justify-center space-x-2"
       >
         <span *ngIf="!reservando()">
           {{ segundosRestantes() > 0 ? 'Reserva Activa (Continuar)' : 'Bloquear y Reservar (10 min)' }}
@@ -244,7 +244,7 @@
         <span *ngIf="reservando()">Bloqueando en tiempo real...</span>
       </button>
 
-      <div class="text-[11px] text-slate-400 text-center leading-relaxed">
+      <div class="text-[10px] sm:text-[11px] text-slate-400 text-center leading-relaxed">
         🔒 Bloqueo atómico con Upstash Redis para evitar sobreventa de asientos simultánea.
       </div>
     </div>
